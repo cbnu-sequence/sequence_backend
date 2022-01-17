@@ -5,7 +5,14 @@ const registerValidator = require("../validators/register");
 const {dbSecretFields} = require('../configs');
 const asyncHandler = require('express-async-handler');
 const createError = require('http-errors');
-const { hashSync } = require("bcrypt");
+const qs = require('qs');
+const axios = require("axios")
+const {
+   KAKAO_REROUTING,
+   KAKAO_CLIENT_ID,
+   KAKAO_CLIENT_SECRET,
+} = require('../configs')
+
 
 exports.register = asyncHandler(async(req, res) => {
    const { body } = req
@@ -14,7 +21,7 @@ exports.register = asyncHandler(async(req, res) => {
    const emailDuple = await User.findOne({email:body.email});
    if(emailDuple) throw createError(400,"Email Already In Use");
    const hashedPassword = await bcrypt.hash(body.password, 12);
-   const user = await User.create({...body, password: hashedPassword});
+   const user = await User.create({...body, password: hashedPassword,code:null});
    req.session.userId = user.id
    res.json({status: 201, success: true, message: 'User Registered', user: _.omit(user.toObject(), dbSecretFields)});
 });
@@ -39,5 +46,58 @@ exports.getme = asyncHandler(async(req,res) => {
 exports.logout = asyncHandler( async(req,res) => {
    req.session.destroy();
    res.json({status:201, success:true, message:"User Logged Out!"});
+});
+
+exports.kakaoLogin = asyncHandler(async(req,res)=>{
+   const {body} = req
+   const accessCode = body.accessCode;
+   if(!accessCode) throw createError(400, "No Access Code Found")
+   const token = await axios({//token
+      method: 'POST',
+      url: 'https://kauth.kakao.com/oauth/token',
+      headers:{
+         'content-type':'application/x-www-form-urlencoded'
+      },
+      data:qs.stringify({
+         grant_type: 'authorization_code',
+         client_id:KAKAO_CLIENT_ID,
+         client_secret:KAKAO_CLIENT_SECRET,
+         redirectUri:KAKAO_REROUTING,
+         code:accessCode,
+      })
+   })
+
+   const user = await axios({
+      method:'get',
+      url:'https://kapi.kakao.com/v2/user/me',
+      headers:{
+         Authorization: `Bearer ${token.data.access_token}`
+      },
+      params: {
+         property_keys:["properties.nickname","kakao_account.email"]
+      }
+   })
+
+   const userId = user.data.id;
+   const userEmail = user.data.kakao_account.email;
+   const userName = user.data.properties.nickname;
+   const password = await bcrypt.hash(Math.random().toString(36).substr(2,11), 12)
+   const exUser = await User.findOne({code:userId});
+   if(exUser)
+   {
+      req.session.userId = exUser.id
+      res.json({success: true, status: 200, message:"User Logged In"});
+   }
+   if(!exUser)
+   {
+      const newUser = await User.create({
+         code:userId,
+         email:userEmail,
+         name:userName,
+         password: password
+      });
+      req.session.userId = newUser.id
+      res.json({success: true, status: 200, message:"User Registered And Logged In"});
+   }
 })
 

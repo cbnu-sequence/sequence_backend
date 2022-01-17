@@ -7,10 +7,7 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const {
    SESSION_SECRET,
-   IS_PRODUCTION,
 } = require('./configs')
-
-
 
 app.use(
    process.env.NODE_ENV === "dev" ? morgan("dev") : morgan("combined")
@@ -23,7 +20,7 @@ app.use(
       secret: SESSION_SECRET,
       cookie: {
          secure: false,
-         maxAge: 1000 * 60 * 60 * 24,
+         maxAge: 10 * 1000 * 60 * 60 * 24,
       }
    })
 )

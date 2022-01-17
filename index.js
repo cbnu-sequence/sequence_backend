@@ -13,9 +13,7 @@ const {
 } = require('./configs')
 
 mongoose.connect(DATABASE_CONNECTION_STRINGS, {
-   // useCreateIndex: true,
    useNewUrlParser: true,
-   // useFindAndModify: true,
    useUnifiedTopology: true,
 }).then(()=> {
    console.log('Database Connected!');
