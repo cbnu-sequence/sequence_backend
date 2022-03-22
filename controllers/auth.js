@@ -7,10 +7,16 @@ const asyncHandler = require('express-async-handler');
 const createError = require('http-errors');
 const qs = require('qs');
 const axios = require("axios")
+const nodemailer = require("nodemailer")
 const {
    KAKAO_REROUTING,
    KAKAO_CLIENT_ID,
    KAKAO_CLIENT_SECRET,
+    MAIL_SERVICE,
+    MAIL_USER,
+    MAIL_PASS,
+    MAIL_FROM,
+    MAIL_HOST
 } = require('../configs')
 
 
@@ -30,13 +36,40 @@ exports.register = asyncHandler(async(req, res) => {
    const hashedPassword = await bcrypt.hash(body.password, 12);
 
    const user = await User.create({...body, password: hashedPassword, code:null});
-   
+   try {
+      const mailConfig = {
+         service: MAIL_SERVICE,
+         host: MAIL_HOST,
+         port: 587,
+         auth: {
+            user: MAIL_USER,
+            pass: MAIL_PASS
+         }
+      }
+      const message = {
+         from: MAIL_FROM,
+         to: body.email,
+         subject: "이메일 인증 메일입니다.",
+         html: '<a href="http://localhost:3000/auth/valid?authUrl=' + body.email+ '"><p> 이메일을 인증하시려면 여기를 클릭하세요 </p></a>'
+      }
+      const transporter = nodemailer.createTransport(mailConfig)
+      transporter.sendMail(message)
+   } catch (error) {
+      throw createError(400,"Mail does not send")
+   }
    res.json({status: 201, success: true, message: 'User Registered', user: _.omit(user.toObject(), dbSecretFields)});
 });
 
+exports.changeValidEmail = asyncHandler(async (req, res) => {
+   const {authUrl} = req.query;
+   console.log(authUrl);
+   await User.findOneAndUpdate({email: authUrl}, {$set: {valid: 1}});
+   res.json({status: 201, success: true, message: 'Change validate Email'});
+})
+
 exports.login = asyncHandler(async(req,res) => {
    const {body} = req;
-   const exUser = await User.findOne({email:body.email});
+   const exUser = await User.findOne({email:body.email, valid: 1});
    if(!exUser) throw createError(400,"User Not Found");
    const isPasswordCorrect = await bcrypt.compare(body.password, exUser.password);
    if(isPasswordCorrect){

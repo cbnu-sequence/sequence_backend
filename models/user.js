@@ -37,6 +37,10 @@ const schema = new mongoose.Schema({
       enum: ['Admin', 'User','Member'], // Added Role : Member
       default: 'User'
    },
+   valid: {
+      type: Boolean,
+      default: 0,
+   },
    posts: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Post',
