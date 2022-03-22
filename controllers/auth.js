@@ -15,14 +15,22 @@ const {
 
 
 exports.register = asyncHandler(async(req, res) => {
-   const { body } = req
+   const { body } = req;
+
    const validationResult = registerValidator(body);
    if(validationResult !== true) throw createError(400, "Validation Failed");
+
    const emailDuple = await User.findOne({email:body.email});
    if(emailDuple) throw createError(400,"Email Already In Use");
+   const telDuple = await User.findOne({tel:body.tel});
+   if(telDuple) throw createError(400,"Tel Already In Use");
+   const nicknameDuple = await User.findOne({nickname:body.nickname});
+   if(nicknameDuple) throw createError(400,"Nickname Already In Use");
+
    const hashedPassword = await bcrypt.hash(body.password, 12);
-   const user = await User.create({...body, password: hashedPassword,code:null});
-   req.session.userId = user.id
+
+   const user = await User.create({...body, password: hashedPassword, code:null});
+   
    res.json({status: 201, success: true, message: 'User Registered', user: _.omit(user.toObject(), dbSecretFields)});
 });
 
