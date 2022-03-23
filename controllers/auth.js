@@ -112,18 +112,15 @@ exports.login = asyncHandler(async(req,res) => {
 
 exports.getme = asyncHandler(async(req,res) => {
    const { user } = req;
-
-   res.json({status: 201, success:true, data:user});
+   const data = await User.findOne(user).populate("posts");
+   res.json({status: 201, success:true, data});
 })
 
 exports.logout = asyncHandler( async(req,res) => {
 
    if(req.session.userId){
-      console.log('로그아웃');
-
       req.session.destroy(function(err){
-         if(err) throw err;
-         console.log('세션 삭제하고 로그아웃됨');
+         if(err) throw createError(400, "logout error");
       });
    }
    res.json({status:201, success:true, message:"User Logged Out!"});
