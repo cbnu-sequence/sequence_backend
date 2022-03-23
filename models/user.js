@@ -7,30 +7,25 @@ const schema = new mongoose.Schema({
    },
    email: {
       type: String,
-      unique: true,
-      required: true,
+      unique: true
    },
    password: {
       type: String,
-      sparse: true,
-      required: true,
+      sparse: true
    },
    name: {
       type: String,
-      trim: true,
-      required: true,
+      trim: true
    },
    tel: {
       type: String,
       unique: true,
-      sparse: true,
-      required: true,
+      sparse: true
    },
    nickname: {
       type: String,
       unique: true,
-      trim: true,
-      required: true,
+      trim: true
    },
    role : {
       type: String,
