@@ -1,6 +1,8 @@
 const bcrypt = require('bcrypt');
 const _ = require('lodash');
+const Post = require('../models/post')
 const User = require('../models/user');
+const Token = require('../models/Token');
 const registerValidator = require("../validators/register");
 const {dbSecretFields} = require('../configs');
 const asyncHandler = require('express-async-handler');
@@ -8,6 +10,7 @@ const createError = require('http-errors');
 const qs = require('qs');
 const axios = require("axios")
 const nodemailer = require("nodemailer")
+const crypto = require("crypto")
 const {
    KAKAO_REROUTING,
    KAKAO_CLIENT_ID,
@@ -36,6 +39,17 @@ exports.register = asyncHandler(async(req, res) => {
    const hashedPassword = await bcrypt.hash(body.password, 12);
 
    const user = await User.create({...body, password: hashedPassword, code:null});
+
+   // 토큰 생성
+   const token = crypto.randomBytes(20).toString('hex');
+   const data = {
+      token,
+      email: body.email,
+      ttl: 600 // ttl 값 설정 (5분)
+   };
+   await Token.create({key: data.token, email: data.email, ttl: data.ttl});
+
+   // 메일 전송
    try {
       const mailConfig = {
          service: MAIL_SERVICE,
@@ -50,10 +64,10 @@ exports.register = asyncHandler(async(req, res) => {
          from: MAIL_FROM,
          to: body.email,
          subject: "이메일 인증 메일입니다.",
-         html: '<a href="http://localhost:3000/auth/valid?authUrl=' + body.email+ '"><p> 이메일을 인증하시려면 여기를 클릭하세요 </p></a>'
+         html: '<a href="http://localhost:3000/auth/valid?token=' + token + '"><p> 이메일을 인증하시려면 여기를 클릭하세요 </p></a>'
       }
       const transporter = nodemailer.createTransport(mailConfig)
-      transporter.sendMail(message)
+      await transporter.sendMail(message)
    } catch (error) {
       throw createError(400,"Mail does not send")
    }
@@ -61,31 +75,57 @@ exports.register = asyncHandler(async(req, res) => {
 });
 
 exports.changeValidEmail = asyncHandler(async (req, res) => {
-   const {authUrl} = req.query;
-   console.log(authUrl);
-   await User.findOneAndUpdate({email: authUrl}, {$set: {valid: 1}});
+   const {token} = req.query;
+
+   // token 값으로 찾기
+   const data = await Token.findOne({key: token});
+   if(!data) {
+      throw createError(400,"Email does not changed.")
+   }
+   if(new Date() > data.createdAt.setSeconds(data.ttl)) {
+      await Token.deleteOne({data});
+      throw createError(400,"The validity period has expired.")
+   }
+
+   // 이메일을 사용 가능하도록 변경
+   await User.findOneAndUpdate({email: data.email}, {$set: {valid: 1}});
+   await Token.deleteOne({_id: data._id});
    res.json({status: 201, success: true, message: 'Change validate Email'});
 })
 
 exports.login = asyncHandler(async(req,res) => {
    const {body} = req;
-   const exUser = await User.findOne({email:body.email, valid: 1});
+   const exUser = await User.findOne({email:body.email});
+
+   // 이메일 인증이 필요하면 로그인 x
+   if(exUser.valid == 0) throw createError(400, "Email verification required")
+
    if(!exUser) throw createError(400,"User Not Found");
    const isPasswordCorrect = await bcrypt.compare(body.password, exUser.password);
    if(isPasswordCorrect){
-      req.session.userId = exUser.id
+
+      req.session.userId = exUser.id;
+      req.session.save();
       res.json({status: 201, success: true, message: 'User Logged In!'});
    } else throw createError(403, "Password Not Matched!");
 })
 
 exports.getme = asyncHandler(async(req,res) => {
    const { user } = req;
-   if(!user) throw createError(404, "User Info Not Found");
+
    res.json({status: 201, success:true, data:user});
 })
 
 exports.logout = asyncHandler( async(req,res) => {
-   req.session.destroy();
+
+   if(req.session.userId){
+      console.log('로그아웃');
+
+      req.session.destroy(function(err){
+         if(err) throw err;
+         console.log('세션 삭제하고 로그아웃됨');
+      });
+   }
    res.json({status:201, success:true, message:"User Logged Out!"});
 });
 

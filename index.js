@@ -12,6 +12,7 @@ const {
    DATABASE_CONNECTION_STRINGS
 } = require('./configs')
 
+
 mongoose.connect(DATABASE_CONNECTION_STRINGS, {
    useNewUrlParser: true,
    useUnifiedTopology: true,
