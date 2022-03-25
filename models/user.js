@@ -17,15 +17,10 @@ const schema = new mongoose.Schema({
       type: String,
       trim: true
    },
-   tel: {
+   phoneNumber: {
       type: String,
       unique: true,
       sparse: true
-   },
-   nickname: {
-      type: String,
-      unique: true,
-      trim: true
    },
    role : {
       type: String,

@@ -4,7 +4,7 @@ const Post = require('../models/post')
 const User = require('../models/user');
 const Token = require('../models/Token');
 const registerValidator = require("../validators/register");
-const {dbSecretFields} = require('../configs');
+const {dbSecretFields, PORT} = require('../configs');
 const asyncHandler = require('express-async-handler');
 const createError = require('http-errors');
 const qs = require('qs');
@@ -31,21 +31,30 @@ exports.register = asyncHandler(async(req, res) => {
 
    const emailDuple = await User.findOne({email:body.email});
    if(emailDuple) throw createError(400,"Email Already In Use");
-   const telDuple = await User.findOne({tel:body.tel});
-   if(telDuple) throw createError(400,"Tel Already In Use");
-   const nicknameDuple = await User.findOne({nickname:body.nickname});
-   if(nicknameDuple) throw createError(400,"Nickname Already In Use");
-
+   const phoneNumberDuple = await User.findOne({phoneNumber:body.phoneNumber});
+   if(phoneNumberDuple) throw createError(400,"PhoneNumber Already In Use");
    const hashedPassword = await bcrypt.hash(body.password, 12);
 
    const user = await User.create({...body, password: hashedPassword, code:null});
 
    // 토큰 생성
-   const token = crypto.randomBytes(20).toString('hex');
+   let token
+   while (true) {
+      token = ''
+      for (let i = 0; i < 6; i++) {
+         token += String(Math.floor(Math.random() * 10))
+      }
+      const val = await Token.findOne({key: token})
+      if(!val) {
+         break
+      }
+   }
+
+
    const data = {
       token,
       email: body.email,
-      ttl: 600 // ttl 값 설정 (5분)
+      ttl: 600 // ttl 값 설정 (10분)
    };
    await Token.create({key: data.token, email: data.email, ttl: data.ttl});
 
@@ -64,7 +73,7 @@ exports.register = asyncHandler(async(req, res) => {
          from: MAIL_FROM,
          to: body.email,
          subject: "이메일 인증 메일입니다.",
-         html: '<a href="http://localhost:3000/auth/valid?token=' + token + '"><p> 이메일을 인증하시려면 여기를 클릭하세요 </p></a>'
+         html: '<p> 이메일 인증 번호는 '+ token + '입니다 </p>'
       }
       const transporter = nodemailer.createTransport(mailConfig)
       await transporter.sendMail(message)
@@ -75,7 +84,7 @@ exports.register = asyncHandler(async(req, res) => {
 });
 
 exports.changeValidEmail = asyncHandler(async (req, res) => {
-   const {token} = req.query;
+   const {token} = req.body;
 
    // token 값으로 찾기
    const data = await Token.findOne({key: token});
@@ -90,7 +99,7 @@ exports.changeValidEmail = asyncHandler(async (req, res) => {
    // 이메일을 사용 가능하도록 변경
    await User.findOneAndUpdate({email: data.email}, {$set: {valid: 1}});
    await Token.deleteOne({_id: data._id});
-   res.json({status: 201, success: true, message: 'Change validate Email'});
+   res.json({status: 200, success: true, message: 'Change validate Email'});
 })
 
 exports.login = asyncHandler(async(req,res) => {
@@ -178,4 +187,3 @@ exports.kakaoLogin = asyncHandler(async(req,res)=>{
       res.json({success: true, status: 200, message:"User Registered And Logged In"});
    }
 })
-
