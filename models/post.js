@@ -11,22 +11,28 @@ const commentSchema = new mongoose.Schema({
       timestamps: true
 });
 
-const postSchema = new mongoose.Schema({
+const schema = new mongoose.Schema({
    title: {
-       type: String,
-       required: true,
-       unique: true
+      type: String,
+      required: true,
+      unique: true
     },
     contents: {
-       type: String,
-       required: true,
+      type: String,
+      required: true,
     },
     writer: {
-       type: String,
-       required: true,
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: 'User',
+      unique: true,
+      sparse: true,
     },
     comments :[ commentSchema ],
  },{
     timestamps: true
  });
- 
+mongoose.model('Comment', commentSchema)
+ const model = mongoose.model('Post', schema);
+
+ module.exports = model;

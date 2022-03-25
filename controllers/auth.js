@@ -1,50 +1,128 @@
 const bcrypt = require('bcrypt');
 const _ = require('lodash');
+const Post = require('../models/post')
 const User = require('../models/user');
+const Token = require('../models/Token');
 const registerValidator = require("../validators/register");
 const {dbSecretFields} = require('../configs');
 const asyncHandler = require('express-async-handler');
 const createError = require('http-errors');
 const qs = require('qs');
 const axios = require("axios")
+const nodemailer = require("nodemailer")
+const crypto = require("crypto")
 const {
    KAKAO_REROUTING,
    KAKAO_CLIENT_ID,
    KAKAO_CLIENT_SECRET,
+    MAIL_SERVICE,
+    MAIL_USER,
+    MAIL_PASS,
+    MAIL_FROM,
+    MAIL_HOST
 } = require('../configs')
 
 
 exports.register = asyncHandler(async(req, res) => {
-   const { body } = req
+   const { body } = req;
+
    const validationResult = registerValidator(body);
    if(validationResult !== true) throw createError(400, "Validation Failed");
+
    const emailDuple = await User.findOne({email:body.email});
    if(emailDuple) throw createError(400,"Email Already In Use");
+   const telDuple = await User.findOne({tel:body.tel});
+   if(telDuple) throw createError(400,"Tel Already In Use");
+   const nicknameDuple = await User.findOne({nickname:body.nickname});
+   if(nicknameDuple) throw createError(400,"Nickname Already In Use");
+
    const hashedPassword = await bcrypt.hash(body.password, 12);
-   const user = await User.create({...body, password: hashedPassword,code:null});
-   req.session.userId = user.id
+
+   const user = await User.create({...body, password: hashedPassword, code:null});
+
+   // 토큰 생성
+   const token = crypto.randomBytes(20).toString('hex');
+   const data = {
+      token,
+      email: body.email,
+      ttl: 600 // ttl 값 설정 (5분)
+   };
+   await Token.create({key: data.token, email: data.email, ttl: data.ttl});
+
+   // 메일 전송
+   try {
+      const mailConfig = {
+         service: MAIL_SERVICE,
+         host: MAIL_HOST,
+         port: 587,
+         auth: {
+            user: MAIL_USER,
+            pass: MAIL_PASS
+         }
+      }
+      const message = {
+         from: MAIL_FROM,
+         to: body.email,
+         subject: "이메일 인증 메일입니다.",
+         html: '<a href="http://localhost:3000/auth/valid?token=' + token + '"><p> 이메일을 인증하시려면 여기를 클릭하세요 </p></a>'
+      }
+      const transporter = nodemailer.createTransport(mailConfig)
+      await transporter.sendMail(message)
+   } catch (error) {
+      throw createError(400,"Mail does not send")
+   }
    res.json({status: 201, success: true, message: 'User Registered', user: _.omit(user.toObject(), dbSecretFields)});
 });
+
+exports.changeValidEmail = asyncHandler(async (req, res) => {
+   const {token} = req.query;
+
+   // token 값으로 찾기
+   const data = await Token.findOne({key: token});
+   if(!data) {
+      throw createError(400,"Email does not changed.")
+   }
+   if(new Date() > data.createdAt.setSeconds(data.ttl)) {
+      await Token.deleteOne({data});
+      throw createError(400,"The validity period has expired.")
+   }
+
+   // 이메일을 사용 가능하도록 변경
+   await User.findOneAndUpdate({email: data.email}, {$set: {valid: 1}});
+   await Token.deleteOne({_id: data._id});
+   res.json({status: 201, success: true, message: 'Change validate Email'});
+})
 
 exports.login = asyncHandler(async(req,res) => {
    const {body} = req;
    const exUser = await User.findOne({email:body.email});
+
+   // 이메일 인증이 필요하면 로그인 x
+   if(exUser.valid == 0) throw createError(400, "Email verification required")
+
    if(!exUser) throw createError(400,"User Not Found");
    const isPasswordCorrect = await bcrypt.compare(body.password, exUser.password);
    if(isPasswordCorrect){
-      req.session.userId = exUser.id
+
+      req.session.userId = exUser.id;
+      req.session.save();
       res.json({status: 201, success: true, message: 'User Logged In!'});
    } else throw createError(403, "Password Not Matched!");
 })
 
 exports.getme = asyncHandler(async(req,res) => {
    const { user } = req;
-   if(!user) throw createError(404, "User Info Not Found");
-   res.json({status: 201, success:true, data:user});
+   const data = await User.findOne(user).populate("posts");
+   res.json({status: 201, success:true, data});
 })
 
 exports.logout = asyncHandler( async(req,res) => {
-   req.session.destroy();
+
+   if(req.session.userId){
+      req.session.destroy(function(err){
+         if(err) throw createError(400, "logout error");
+      });
+   }
    res.json({status:201, success:true, message:"User Logged Out!"});
 });
 

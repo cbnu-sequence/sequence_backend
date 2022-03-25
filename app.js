@@ -5,19 +5,27 @@ const { notFound, errorHandler } = require("./errors/handler");
 const morgan = require("morgan");
 const bodyParser = require('body-parser');
 const session = require('express-session');
+const MongoDBStore = require('express-mongodb-session')(session);
 const {
-   SESSION_SECRET,
+   SESSION_SECRET, DATABASE_CONNECTION_STRINGS,
 } = require('./configs')
 
 app.use(
    process.env.NODE_ENV === "dev" ? morgan("dev") : morgan("combined")
 );
+
+const store = new MongoDBStore({
+    uri: DATABASE_CONNECTION_STRINGS,
+    collection: 'mySessions'
+});
+
 app.use(
    session({
       name: "session.sid",
       resave: false,
       saveUninitialized: false,
       secret: SESSION_SECRET,
+       store: store,
       cookie: {
          secure: false,
          maxAge: 10 * 1000 * 60 * 60 * 24,
