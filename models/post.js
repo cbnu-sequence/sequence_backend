@@ -3,10 +3,12 @@ const mongoose = require('mongoose');
 const commentSchema = new mongoose.Schema({
    contents:{
       type: String, 
-      required:true},
+      required:true
+   },
    writer:{
       type: String, 
-      required:true},
+      required:true
+   },
 },{
       timestamps: true
 });

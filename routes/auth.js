@@ -5,7 +5,7 @@ const { requiredLogin } = require('../middlewares/auth')
 
 router.post("/register", controller.register);
 router.post("/login", controller.login);
-router.get("/getme",requiredLogin,  controller.getme);
+router.get("/me",requiredLogin,  controller.getme);
 router.get("/logout", controller.logout);
 router.get("/valid", controller.changeValidEmail);
 router.post("/kakao/login", controller.kakaoLogin);

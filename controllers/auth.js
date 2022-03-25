@@ -4,7 +4,7 @@ const Post = require('../models/post')
 const User = require('../models/user');
 const Token = require('../models/Token');
 const registerValidator = require("../validators/register");
-const {dbSecretFields} = require('../configs');
+const {dbSecretFields, PORT} = require('../configs');
 const asyncHandler = require('express-async-handler');
 const createError = require('http-errors');
 const qs = require('qs');
@@ -31,8 +31,8 @@ exports.register = asyncHandler(async(req, res) => {
 
    const emailDuple = await User.findOne({email:body.email});
    if(emailDuple) throw createError(400,"Email Already In Use");
-   const telDuple = await User.findOne({tel:body.tel});
-   if(telDuple) throw createError(400,"Tel Already In Use");
+   const phoneNumberDuple = await User.findOne({phoneNumber:body.phoneNumber});
+   if(phoneNumberDuple) throw createError(400,"PhoneNumber Already In Use");
    const nicknameDuple = await User.findOne({nickname:body.nickname});
    if(nicknameDuple) throw createError(400,"Nickname Already In Use");
 
@@ -64,7 +64,7 @@ exports.register = asyncHandler(async(req, res) => {
          from: MAIL_FROM,
          to: body.email,
          subject: "이메일 인증 메일입니다.",
-         html: '<a href="http://localhost:3000/auth/valid?token=' + token + '"><p> 이메일을 인증하시려면 여기를 클릭하세요 </p></a>'
+         html: '<a href="http://localhost:' + PORT + '/auth/valid?token=' + token + '"><p> 이메일을 인증하시려면 여기를 클릭하세요 </p></a>'
       }
       const transporter = nodemailer.createTransport(mailConfig)
       await transporter.sendMail(message)
@@ -178,4 +178,3 @@ exports.kakaoLogin = asyncHandler(async(req,res)=>{
       res.json({success: true, status: 200, message:"User Registered And Logged In"});
    }
 })
-
