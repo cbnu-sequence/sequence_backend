@@ -7,6 +7,6 @@ router.post("/register", controller.register);
 router.post("/login", controller.login);
 router.get("/me",requiredLogin,  controller.getme);
 router.get("/logout", controller.logout);
-router.get("/valid", controller.changeValidEmail);
+router.post("/valid", controller.changeValidEmail);
 router.post("/kakao/login", controller.kakaoLogin);
 module.exports = router;
