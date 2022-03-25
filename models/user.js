@@ -22,11 +22,6 @@ const schema = new mongoose.Schema({
       unique: true,
       sparse: true
    },
-   nickname: {
-      type: String,
-      unique: true,
-      trim: true
-   },
    role : {
       type: String,
       enum: ['Admin', 'User','Member'], // Added Role : Member

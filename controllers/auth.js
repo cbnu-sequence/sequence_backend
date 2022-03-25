@@ -33,9 +33,6 @@ exports.register = asyncHandler(async(req, res) => {
    if(emailDuple) throw createError(400,"Email Already In Use");
    const phoneNumberDuple = await User.findOne({phoneNumber:body.phoneNumber});
    if(phoneNumberDuple) throw createError(400,"PhoneNumber Already In Use");
-   const nicknameDuple = await User.findOne({nickname:body.nickname});
-   if(nicknameDuple) throw createError(400,"Nickname Already In Use");
-
    const hashedPassword = await bcrypt.hash(body.password, 12);
 
    const user = await User.create({...body, password: hashedPassword, code:null});
@@ -57,7 +54,7 @@ exports.register = asyncHandler(async(req, res) => {
    const data = {
       token,
       email: body.email,
-      ttl: 600 // ttl 값 설정 (5분)
+      ttl: 600 // ttl 값 설정 (10분)
    };
    await Token.create({key: data.token, email: data.email, ttl: data.ttl});
 
