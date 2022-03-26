@@ -136,9 +136,8 @@ exports.logout = asyncHandler( async(req,res) => {
 });
 
 exports.kakaoLogin = asyncHandler(async(req,res)=>{
-   const {body} = req
-   const accessCode = body.accessCode;
-   if(!accessCode) throw createError(400, "No Access Code Found")
+   const {code} = req.query
+   if(!code) throw createError(400, "No Access Code Found")
    const token = await axios({//token
       method: 'POST',
       url: 'https://kauth.kakao.com/oauth/token',
@@ -150,7 +149,7 @@ exports.kakaoLogin = asyncHandler(async(req,res)=>{
          client_id:KAKAO_CLIENT_ID,
          client_secret:KAKAO_CLIENT_SECRET,
          redirectUri:KAKAO_REROUTING,
-         code:accessCode,
+         code,
       })
    })
 
@@ -166,13 +165,14 @@ exports.kakaoLogin = asyncHandler(async(req,res)=>{
    })
 
    const userId = user.data.id;
-   const userEmail = user.data.kakao_account.email;
+   const userEmail = user.data.kakao_account.email + ":kakao";
    const userName = user.data.properties.nickname;
    const password = await bcrypt.hash(Math.random().toString(36).substr(2,11), 12)
    const exUser = await User.findOne({code:userId});
    if(exUser)
    {
       req.session.userId = exUser.id
+      req.session.save()
       res.json({success: true, status: 200, message:"User Logged In"});
    }
    if(!exUser)
@@ -184,6 +184,7 @@ exports.kakaoLogin = asyncHandler(async(req,res)=>{
          password: password
       });
       req.session.userId = newUser.id
+      req.session.save()
       res.json({success: true, status: 200, message:"User Registered And Logged In"});
    }
 })
