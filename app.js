@@ -15,8 +15,8 @@ app.use(
    process.env.NODE_ENV === "dev" ? morgan("dev") : morgan("combined")
 );
 app.use(cors({
-    origin:"*",
-    credential: true
+    origin:"http://localhost:3000",
+    credentials: true
 }));
 
 const store = new MongoDBStore({

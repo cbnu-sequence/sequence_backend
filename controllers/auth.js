@@ -112,10 +112,9 @@ exports.login = asyncHandler(async(req,res) => {
    if(!exUser) throw createError(400,"User Not Found");
    const isPasswordCorrect = await bcrypt.compare(body.password, exUser.password);
    if(isPasswordCorrect){
-
       req.session.userId = exUser.id;
       req.session.save();
-      res.json({status: 201, success: true, message: 'User Logged In!'});
+      res.json({status: 201, success: true, message: 'User Logged In!', data: {userId: exUser._id}});
    } else throw createError(403, "Password Not Matched!");
 })
 
