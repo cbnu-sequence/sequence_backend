@@ -56,6 +56,34 @@ exports.register = asyncHandler(async(req, res) => {
    res.json(createResponse(res, user, 'User Registered'));
 });
 
+exports.resendMail = asyncHandler(async (req, res) => {
+   const {user} = req;
+   if(user.valid == 1) {
+      throw createError(400, "The email is already verified.");
+   }
+   await Token.findOneAndDelete({email: user.email});
+   // 토큰 생성
+   let token;
+   while (true) {
+      token = ''
+      for (let i = 0; i < 6; i++) {
+         token += String(Math.floor(Math.random() * 10))
+      }
+      const val = await Token.findOne({key: token})
+      if(!val) {
+         break
+      }
+   }
+   const data = {
+      token,
+      email: user.email,
+      ttl: 600 // ttl 값 설정 (10분)
+   };
+   await Token.create({key: data.token, email: data.email, ttl: data.ttl});
+   await sendMail(user.email,"이메일 인증 메일입니다.", '<p> 이메일 인증 번호는 '+ token + '입니다 </p>');
+   res.json(createResponse(res));
+})
+
 exports.changeValidEmail = asyncHandler(async (req, res) => {
    const {token} = req.body;
    if(!token) {
@@ -80,10 +108,6 @@ exports.changeValidEmail = asyncHandler(async (req, res) => {
 exports.login = asyncHandler(async(req,res) => {
    const {body} = req;
    const exUser = await User.findOne({email:body.email});
-
-   // 이메일 인증이 필요하면 로그인 x
-   if(exUser.valid == 0) throw createError(400, "Email verification required")
-
    if(!exUser) throw createError(400,"User Not Found");
    const isPasswordCorrect = await bcrypt.compare(body.password, exUser.password);
    if(isPasswordCorrect){
