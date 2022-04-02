@@ -11,3 +11,6 @@ exports.MAIL_USER = process.env.MAIL_USER;
 exports.MAIL_PASS = process.env.MAIL_PASS;
 exports.MAIL_FROM = process.env.MAIL_FROM;
 exports.MAIL_HOST = process.env.MAIL_HOST;
+exports.HOST = process.env.HOST;
+exports.ROOT_DIR = process.env.ROOT_DIR;
+exports.UPLOAD_DIR = process.env.UPLOAD_DIR;

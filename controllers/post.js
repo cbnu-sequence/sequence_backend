@@ -3,7 +3,7 @@ const createError = require('http-errors');
 const createPostValidator = require("../validators/createPost");
 const Post = require('../models/post');
 const {createResponse} = require('../util/response');
-
+const {updateFilesOf, assignTo} = require('../services/post')
 // User Relevant Controllers
 // exports.findUsers = asyncHandler(async (req, res) => {
 //   const { query: { page, limit } } = req;
@@ -40,7 +40,7 @@ const {createResponse} = require('../util/response');
 
 //Post Create
 exports.createPost = asyncHandler(async(req, res) =>{
-  const { body ,user } = req;
+  const { body ,user} = req;
     const validationResult = createPostValidator(body);
     if(validationResult !== true) throw createError(400, "Validation Failed");
     const data = await Post.create({...body, writer: user._id});

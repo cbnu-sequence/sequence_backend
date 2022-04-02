@@ -19,6 +19,10 @@ const schema = new mongoose.Schema({
       ref: 'User',
       sparse: true,
     },
+    files: [{
+       type: mongoose.Schema.Types.ObjectId,
+       ref: "File",
+    }]
  },{
     timestamps: true
  });
