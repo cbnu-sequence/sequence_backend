@@ -1,15 +1,16 @@
-const {updateFilesByUrls, removeFilesByUrls} = require('../util/file')
+const {updateFilesByUrls, removeFilesByUrls, updateFilesByIds, removeFilesByIds} = require('../util/file')
 
 exports.updateFilesOf = async (post, user) => {
-    const urls = [post.content, ...(post.files || []).map(post => post.url)];
+    const ids = (post.files || []);
+    console.log(post._id);
     await Promise.all([
-        updateFilesByUrls(user, post._id, 'Post', urls),
+        updateFilesByIds(user, post._id, 'Post', ids),
     ]);
 }
 
 exports.removeFilesOf = async (post, user) => {
-    const urls = [post.content, ...(post.files || []).map(post => post.url)];
+    const ids = (post.files || []);
     await Promise.all([
-        removeFilesByUrls(user, urls),
+        removeFilesByIds(user, ids),
     ])
 }

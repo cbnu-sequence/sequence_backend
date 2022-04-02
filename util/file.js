@@ -60,7 +60,7 @@ const removeFileById = async (user, id, baseDir = UPLOAD_DIR) => {
     }
     const filePath = join(ROOT_DIR, '/', baseDir, '/', getBasename(file.url));
     await Promise.all([file.deleteOne(), promises.unlink(filePath)]);
-    return filePath
+    return filePath;
 };
 
 const removeFilesByUrls = async (req, urls, baseDir = UPLOAD_DIR) => await Promise.all(urls.map(url => removeFileByUrl(req, url, baseDir)));
@@ -75,11 +75,10 @@ const updateFilesByUrls = async (user, ref, refModel, urls) => {
     }
 
     const inDB = files.map(file => file.url);
-    const deletions = difference(inDB, urls);
-    const additions = difference(urls, inDB);
+    const additions = urls.filter(v => !inDB.includes(v));
 
     if (additions.length > 0) await File.updateMany({ url: { $in: additions } }, { $set: { ref, refModel } });
-    // if (deletions.length > 0) await removeFilesByUrls(user, deletions);
+
 };
 
 const updateFilesByIds = async (user, ref, refModel, ids) => {
@@ -91,11 +90,10 @@ const updateFilesByIds = async (user, ref, refModel, ids) => {
 
     ids = ids.map(id => String(id));
     const inDB = files.map(file => String(file._id));
-    const deletions = difference(inDB, ids);
-    const additions = difference(ids, inDB);
+    const additions = ids.filter(v => !inDB.includes(v));
 
     if (additions.length > 0) await File.updateMany({ _id: { $in: additions } }, { $set: { ref, refModel } });
-    // if (deletions.length > 0) await removeFilesByIds(user, deletions);
+
 };
 
 const findImageUrlsFromHtml = html => {

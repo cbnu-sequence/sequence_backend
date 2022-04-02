@@ -4,8 +4,7 @@ const v = new Validator();
 const schema = {
    title: { type: "string"},
    content: { type: "string"},
-   type: { type: "string"},
-   $$strict: true,
+   type: { type: "string"}
 };
 
 const checker = v.compile(schema);

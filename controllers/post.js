@@ -3,7 +3,7 @@ const createError = require('http-errors');
 const createPostValidator = require("../validators/createPost");
 const Post = require('../models/post');
 const {createResponse} = require('../util/response');
-const {updateFilesOf, assignTo} = require('../services/post')
+const {updateFilesOf, removeFilesOf} = require('../services/post')
 // User Relevant Controllers
 // exports.findUsers = asyncHandler(async (req, res) => {
 //   const { query: { page, limit } } = req;
@@ -46,18 +46,24 @@ exports.createPost = asyncHandler(async(req, res) =>{
     const data = await Post.create({...body, writer: user._id});
     user.posts.push(data._id);
     await user.save();
+    await updateFilesOf(data, user);
   res.json(createResponse(res, '', "Document created"))
 })
 
 //Post Delete
  exports.deletePost = asyncHandler(async(req,res) => {
    const{params: { id } ,user} = req;
-   const exContents = await Post.findById(id)
-   if(!exContents) throw createError(404,"Documents Not Foud")
-   if(user._id.equals(exContents.writer))
+   const exContents = await Post.findById(id);
+   if(!exContents) throw createError(404,"Documents Not Found")
+   if(String(user._id) === String(exContents.writer))
    {
-    await Post.deleteOne({_id:id})
-    res.json(createResponse(res, '', "Document updated"))
+    await Post.deleteOne({_id:id});
+    await removeFilesOf(exContents, user);
+    user.posts.pop(exContents._id);
+    await user.save();
+    res.json(createResponse(res, '', "Document deleted"))
+   } else {
+       throw createError(403, "no Authentication");
    }
  })
 
@@ -65,7 +71,7 @@ exports.updatePost = asyncHandler(async(req, res) => {
     const{params: { id }, body , user} = req;
     const exContents = await Post.findById(id);
     if(!exContents) throw createError(404,"Documents Not Found");
-    if(user._id.equals(exContents.writer))
+    if(String(user._id) === String(exContents.writer))
     {
         await Post.updateOne({_id:id}, body);
         res.json(createResponse(res, '', "Document updated"));
@@ -86,7 +92,7 @@ exports.getPosts = asyncHandler(asyncHandler(async(req, res) => {
 
 exports.getPost = asyncHandler((asyncHandler(async (req, res) => {
     const { postId } = req.params;
-    const data = await Post.find({_id: postId}).populate('writer');
+    const data = await Post.findOne({_id: postId}).populate('writer');
     if(!data) {
         throw createError(404, "no Post");
     }
