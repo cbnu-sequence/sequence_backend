@@ -1,5 +1,5 @@
 const {updateFilesByUrls, removeFilesByUrls, updateFilesByIds, removeFilesByIds} = require('../util/file')
-
+const { POST_CATEGORY } = require('../constants')
 exports.updateFilesOf = async (post, user) => {
     const ids = (post.files || []);
     console.log(post._id);
@@ -13,4 +13,8 @@ exports.removeFilesOf = async (post, user) => {
     await Promise.all([
         removeFilesByIds(user, ids),
     ])
+}
+
+exports.validateCategory = (category) => {
+    return POST_CATEGORY.includes(category);
 }

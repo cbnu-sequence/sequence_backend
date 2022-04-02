@@ -3,11 +3,11 @@ const router = express.Router();
 const controller = require('../controllers/post');
 const { requiredLogin } = require('../middlewares/auth')
 // Posting Relevant
-router.post('', requiredLogin, controller.createPost);//ok
-router.delete('/:id', requiredLogin, controller.deletePost);
-router.post('/:id', requiredLogin, controller.updatePost);
-router.get('', controller.getPosts);
-router.get('/:postId', controller.getPost);
+router.post('/:category', requiredLogin, controller.createPost);//ok
+router.delete('/:category/:id', requiredLogin, controller.deletePost);
+router.post('/:category/:id', requiredLogin, controller.updatePost);
+router.get('/:category', controller.getPosts);
+router.get('/:category/:postId', controller.getPost);
 // Comments Relevant
 //router.post('/posts/:id/comments', requireLoggedIn, controller.createComments);
 //router.delete('/posts/:id/comments/:commentsID', requireLoggedIn, controller.deleteComments);

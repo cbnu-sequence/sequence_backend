@@ -3,7 +3,8 @@ const createError = require('http-errors');
 const createPostValidator = require("../validators/createPost");
 const Post = require('../models/post');
 const {createResponse} = require('../util/response');
-const {updateFilesOf, removeFilesOf} = require('../services/post')
+const {updateFilesOf, removeFilesOf, validateCategory } = require('../services/post');
+
 // User Relevant Controllers
 // exports.findUsers = asyncHandler(async (req, res) => {
 //   const { query: { page, limit } } = req;
@@ -40,9 +41,13 @@ const {updateFilesOf, removeFilesOf} = require('../services/post')
 
 //Post Create
 exports.createPost = asyncHandler(async(req, res) =>{
-  const { body ,user} = req;
+  const { body ,user, params: { category }} = req;
+    if(validateCategory(category) === false) {
+        throw createError(400, 'No category');
+    }
     const validationResult = createPostValidator(body);
     if(validationResult !== true) throw createError(400, "Validation Failed");
+    body.category = category;
     const data = await Post.create({...body, writer: user._id});
     user.posts.push(data._id);
     await user.save();
@@ -85,14 +90,17 @@ exports.getPosts = asyncHandler(asyncHandler(async(req, res) => {
     const limit = (req.query.limit || 10);
     const sort = req.query.sort || undefined;
     const skip = limit * ((isNaN(page) ? 1 : page) - 1);
-
-    const data = await Post.find().populate('writer').limit(limit).skip(skip).sort(sort);
+    const { category } = req.params;
+    if(validateCategory(category) === false) {
+        throw createError(400, 'No category');
+    }
+    const data = await Post.find({category}).populate('writer', ['name']).limit(limit).skip(skip).sort(sort);
     res.json(createResponse(res, data));
 }))
 
 exports.getPost = asyncHandler((asyncHandler(async (req, res) => {
     const { postId } = req.params;
-    const data = await Post.findOne({_id: postId}).populate('writer');
+    const data = await Post.findOne({_id: postId}).populate('writer', ['name']);
     if(!data) {
         throw createError(404, "no Post");
     }
@@ -113,7 +121,7 @@ exports.getPost = asyncHandler((asyncHandler(async (req, res) => {
 //xx
 // //Comment Delete
 // exports.deleteComments = asyncHandler(async(req,res) => {
-//   const{params: { id } ,user}=req;
+//   const{params: { id } ,user}=req;S
 //   const exUser = await User.findById(user._id);
 //   const exContents = await Post.comments.findById(id)
 //   console.log(exContents)
