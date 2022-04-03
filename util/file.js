@@ -1,4 +1,3 @@
-const cheerio = require('cheerio');
 const { promises, existsSync } = require('fs');
 const { sync } = require('mkdirp');
 const multer = require('multer');
@@ -96,18 +95,6 @@ const updateFilesByIds = async (user, ref, refModel, ids) => {
 
 };
 
-const findImageUrlsFromHtml = html => {
-    const $ = cheerio.load(html || '');
-    const urls = [];
-
-    $('img').each(function () {
-        const url = $(this).attr('src');
-        urls.push(url);
-    });
-
-    return urls;
-};
-
 exports.getBasename = getBasename;
 exports.createUpload = createUpload;
 exports.removeFileByUrl = removeFileByUrl;
@@ -116,4 +103,3 @@ exports.removeFilesByUrls = removeFilesByUrls;
 exports.removeFilesByIds = removeFilesByIds;
 exports.updateFilesByUrls = updateFilesByUrls;
 exports.updateFilesByIds = updateFilesByIds;
-exports.findImageUrlFromHtml = findImageUrlsFromHtml;
