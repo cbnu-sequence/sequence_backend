@@ -94,13 +94,15 @@ exports.getPosts = asyncHandler(asyncHandler(async(req, res) => {
     if(validateCategory(category) === false) {
         throw createError(400, 'No category');
     }
-    const data = await Post.find({category}).populate('writer', ['name']).limit(limit).skip(skip).sort(sort);
-    res.json(createResponse(res, data));
+    req.category = category;
+    const count = await Post.find(req.query).count();
+    const data = await Post.find(req.query).populate('writer', ['name']).limit(limit).skip(skip).sort(sort);
+    res.json({'status': 200, 'message':"ok", 'success': "true", count, data});
 }))
 
 exports.getPost = asyncHandler((asyncHandler(async (req, res) => {
     const { postId } = req.params;
-    const data = await Post.findOne({_id: postId}).populate('writer', ['name']);
+    const data = await Post.findOne({_id: postId}).populate('writer', ['name']).populate('files');
     if(!data) {
         throw createError(404, "no Post");
     }
