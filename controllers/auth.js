@@ -49,7 +49,7 @@ exports.register = asyncHandler(async(req, res) => {
    await Token.create({key: data.token, email: data.email, ttl: data.ttl});
 
    // 메일 전송
-   await sendMail(body.email,"이메일 인증 메일입니다.", '<p> 이메일 인증 번호는 '+ token + '입니다 </p>');
+   await sendMail(user.email,"이메일 인증 메일입니다.", token);
    res.json(createResponse(res, user, 'User Registered'));
 });
 
@@ -76,8 +76,9 @@ exports.resendMail = asyncHandler(async (req, res) => {
       email: user.email,
       ttl: 600 // ttl 값 설정 (10분)
    };
+   console.log(token);
    await Token.create({key: data.token, email: data.email, ttl: data.ttl});
-   await sendMail(user.email,"이메일 인증 메일입니다.", '<p> 이메일 인증 번호는 '+ token + '입니다 </p>');
+   await sendMail(user.email,"이메일 인증 메일입니다.", token);
    res.json(createResponse(res));
 })
 

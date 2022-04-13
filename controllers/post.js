@@ -2,6 +2,7 @@ const asyncHandler = require('express-async-handler');
 const createError = require('http-errors');
 const createPostValidator = require("../validators/createPost");
 const Post = require('../models/post');
+const File = require('../models/file');
 const {createResponse} = require('../util/response');
 const {updateFilesOf, removeFilesOf, validateCategory } = require('../services/post');
 
@@ -48,6 +49,11 @@ exports.createPost = asyncHandler(async(req, res) =>{
     const validationResult = createPostValidator(body);
     if(validationResult !== true) throw createError(400, "Validation Failed");
     body.category = category;
+    const exData = body.files? await File.find({'_id' : { $in:
+        body.files
+            }}): [];
+    body.images = exData.filter(file => ['image/gif', 'image/jpeg', 'image/png', 'image/bmp'].includes(file.mimetype)).map(image => image._id);
+    body.files = exData.filter(file => !body.images.includes(file)).map(file => file._id);
     const data = await Post.create({...body, writer: user._id});
     user.posts.push(data._id);
     await user.save();
@@ -102,7 +108,7 @@ exports.getPosts = asyncHandler(asyncHandler(async(req, res) => {
 
 exports.getPost = asyncHandler((asyncHandler(async (req, res) => {
     const { postId } = req.params;
-    const data = await Post.findOne({_id: postId}).populate('writer', ['name']).populate('files');
+    const data = await Post.findOne({_id: postId}).populate('writer', ['name']).populate('files', ['filename','url']).populate('images', ['filename','url']);
     if(!data) {
         throw createError(404, "no Post");
     }

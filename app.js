@@ -16,6 +16,9 @@ const {
 app.use(
    process.env.NODE_ENV === "dev" ? morgan("dev") : morgan("combined")
 );
+
+app.use("", express.static(__dirname));
+
 app.use(cors({
     origin:"http://localhost:3000",
     credentials: true
