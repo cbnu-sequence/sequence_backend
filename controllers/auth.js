@@ -134,33 +134,36 @@ exports.logout = asyncHandler( async(req,res) => {
 });
 
 exports.kakaoLogin = asyncHandler(async(req,res)=>{
-   const {code} = req.query
-   if(!code) throw createError(400, "No Access Code Found")
-   const token = await axios({//token
-      method: 'POST',
-      url: 'https://kauth.kakao.com/oauth/token',
-      headers:{
-         'content-type':'application/x-www-form-urlencoded'
-      },
-      data:qs.stringify({
-         grant_type: 'authorization_code',
-         client_id:KAKAO_CLIENT_ID,
-         client_secret:KAKAO_CLIENT_SECRET,
-         redirectUri:KAKAO_REROUTING,
-         code,
+   const { code, accessToken } = req.query;
+   if(!code && !accessToken) throw createError(400, "No Access Code Found");
+   let token;
+   if(!accessToken) {
+      token = await axios({//token
+         method: 'POST',
+         url: 'https://kauth.kakao.com/oauth/token',
+         headers:{
+            'content-type':'application/x-www-form-urlencoded'
+         },
+         data:qs.stringify({
+            grant_type: 'authorization_code',
+            client_id:KAKAO_CLIENT_ID,
+            client_secret:KAKAO_CLIENT_SECRET,
+            redirectUri:KAKAO_REROUTING,
+            code,
+         })
       })
-   })
+   }
 
    const user = await axios({
       method:'get',
       url:'https://kapi.kakao.com/v2/user/me',
       headers:{
-         Authorization: `Bearer ${token.data.access_token}`
+         Authorization: `Bearer ${accessToken? accessToken : token.data.access_token}`
       },
       params: {
          property_keys:["properties.nickname","kakao_account.email"]
       }
-   })
+   }).catch(err => console.log(err))
 
    const userId = user.data.id;
    const userEmail = user.data.kakao_account.email + ":kakao";
