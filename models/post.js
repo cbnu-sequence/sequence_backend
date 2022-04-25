@@ -1,25 +1,17 @@
 const mongoose = require('mongoose');
-
-const commentSchema = new mongoose.Schema({
-   contents:{
-      type: String, 
-      required:true
-   },
-   writer:{
-      type: String, 
-      required:true
-   },
-},{
-      timestamps: true
-});
+const { POST_CATEGORY } = require('../constants')
 
 const schema = new mongoose.Schema({
    title: {
       type: String,
       required: true,
-      unique: true
     },
-    contents: {
+    category: {
+      type: String,
+      enum: [...POST_CATEGORY],
+      required: true,
+    },
+    content: {
       type: String,
       required: true,
     },
@@ -27,14 +19,20 @@ const schema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       ref: 'User',
-      unique: true,
       sparse: true,
     },
-    comments :[ commentSchema ],
+    files: [{
+       type: mongoose.Schema.Types.ObjectId,
+       ref: "File",
+    }],
+    images: [{
+       type: mongoose.Schema.Types.ObjectId,
+        ref: "File",
+    }]
  },{
     timestamps: true
  });
-mongoose.model('Comment', commentSchema)
- const model = mongoose.model('Post', schema);
+
+const model = mongoose.model('Post', schema);
 
  module.exports = model;

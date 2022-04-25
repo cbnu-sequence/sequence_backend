@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sequence-web-back
+  labels:
+    app: web
+spec:
+  selector:
+    matchLabels:
+      export_cdh: Export_CDH
+  replicas: 4
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  template:
+    metadata:
+      labels:
+        app: web
+        export_cdh: Export_CDH
+    spec:
+      containers:
+        - name: mongo
+          image: mongo
+          ports:
+            - name: mongo
+              containerPort: 27017
+              protocol: TCP
+        - name: sqc-back
+          image: superwonso/sequence-web-dev_sqc-back
+          imagePullSecrets:
+          name: regcred # regcred is the name of the secret
+          ports:
+            - name: sqc-back
+              containerPort: 8879
+              protocol: TCP
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - web
+                topologyKey: kubernetes.io/hostname
+                #=203.255.92.192

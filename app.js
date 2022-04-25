@@ -1,10 +1,13 @@
 const express = require('express');
 const app = express();
 const authRoutes = require('./routes/auth');
+const postRoutes = require('./routes/post');
+const fileRoutes = require('./routes/file');
 const { notFound, errorHandler } = require("./errors/handler");
 const morgan = require("morgan");
 const bodyParser = require('body-parser');
 const session = require('express-session');
+const cors = require("cors");
 const MongoDBStore = require('express-mongodb-session')(session);
 const {
    SESSION_SECRET, DATABASE_CONNECTION_STRINGS,
@@ -13,6 +16,13 @@ const {
 app.use(
    process.env.NODE_ENV === "dev" ? morgan("dev") : morgan("combined")
 );
+
+app.use("", express.static(__dirname));
+
+app.use(cors({
+    origin:"http://localhost:3000",
+    credentials: true
+}));
 
 const store = new MongoDBStore({
     uri: DATABASE_CONNECTION_STRINGS,
@@ -35,7 +45,8 @@ app.use(
 
 app.use(bodyParser.json())
 app.use('/auth', authRoutes);
-
+app.use('/post', postRoutes);
+app.use('/file', fileRoutes);
 app.use(notFound);
 app.use(errorHandler);
 module.exports = app;
