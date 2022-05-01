@@ -151,9 +151,11 @@ exports.kakaoLogin = asyncHandler(async(req,res)=>{
             redirectUri:KAKAO_REROUTING,
             code,
          })
-      })
+      }).catch(err => console.log(err))
+      if(!token) {
+         throw createError(400, 'This token does not exist');
+      }
    }
-
    const user = await axios({
       method:'get',
       url:'https://kapi.kakao.com/v2/user/me',
@@ -164,7 +166,9 @@ exports.kakaoLogin = asyncHandler(async(req,res)=>{
          property_keys:["properties.nickname","kakao_account.email"]
       }
    }).catch(err => console.log(err))
-
+   if(!user) {
+      throw createError(400, "This access token does not exist")
+   }
    const userId = user.data.id;
    const userEmail = user.data.kakao_account.email + ":kakao";
    const userName = user.data.properties.nickname;
@@ -174,7 +178,7 @@ exports.kakaoLogin = asyncHandler(async(req,res)=>{
    {
       req.session.userId = exUser.id
       req.session.save()
-      res.json(createResponse(res, data, "User Logged In"));
+      res.json(createResponse(res, '', "User Logged In"));
    }
    if(!exUser)
    {
