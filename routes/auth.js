@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const controller = require('../controllers/auth');
-const { requiredLogin } = require('../middlewares/auth')
+const { requiredLogin, hasRole } = require('../middlewares/auth')
 
 router.post("/register", controller.register);
 router.post("/login", controller.login);
@@ -10,4 +10,5 @@ router.get("/logout", controller.logout);
 router.post("/valid", controller.changeValidEmail);
 router.get("/kakao/login", controller.kakaoLogin);
 router.post("/mail", requiredLogin, controller.resendMail);
+router.put("/:userId", hasRole, controller.changeUser);
 module.exports = router;

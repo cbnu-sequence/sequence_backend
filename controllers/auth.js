@@ -180,7 +180,7 @@ exports.kakaoLogin = asyncHandler(async(req,res)=>{
       req.session.save()
       res.json(createResponse(res, '', "User Logged In"));
    }
-   if(!exUser)
+   else if(!exUser)
    {
       const newUser = await User.create({
          code:userId,
@@ -193,3 +193,12 @@ exports.kakaoLogin = asyncHandler(async(req,res)=>{
       res.json(createResponse(res, '', 'User Registered And Logged In'));
    }
 })
+
+exports.changeUser = asyncHandler( async(req,res) => {
+   const { userId } = req.params;
+   if(!userId) {
+      throw createError(400, "userId is required")
+   }
+   await User.findOneAndUpdate({_id: userId}, req.body);
+   res.json(createResponse(res,'',"modified"));
+});

@@ -9,3 +9,11 @@ exports.requiredLogin = asyncHandler(async(req,res,next) => {
    if(!req.user) throw createError(400, "Session is not valid");
    return next();
 })
+
+exports.hasRole = asyncHandler(async(req,res,next) => {
+   const userId = req.session.userId;
+   if(!userId) throw createError(403, "You Are Not Logged In");
+   req.user = await User.findById(userId);
+   if(req.user.role !== "Admin") throw createError(400, "You do not have permission");
+   return next();
+})

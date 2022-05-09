@@ -5,7 +5,8 @@ const fileTypes = [
 
 const postCategory = [
     'notice',
-    'project'
+    'project',
+    'sharingInfo',
 ];
 
 exports.FILE_TYPES = fileTypes;
