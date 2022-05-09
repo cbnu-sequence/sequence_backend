@@ -10,5 +10,5 @@ router.get("/logout", controller.logout);
 router.post("/valid", controller.changeValidEmail);
 router.get("/kakao/login", controller.kakaoLogin);
 router.post("/mail", requiredLogin, controller.resendMail);
-router.put("/:userId", hasRole, controller.changeUser);
+router.put("/:email", hasRole, controller.changeUser);
 module.exports = router;

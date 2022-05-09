@@ -4,61 +4,36 @@ const createPostValidator = require("../validators/createPost");
 const Post = require('../models/post');
 const File = require('../models/file');
 const {createResponse} = require('../util/response');
-const {updateFilesOf, removeFilesOf, validateCategory } = require('../services/post');
-
-// User Relevant Controllers
-// exports.findUsers = asyncHandler(async (req, res) => {
-//   const { query: { page, limit } } = req;
-//   const _page = +(page || 1);
-//   const _limit = +(limit || 10);
-//   const skip = (page - 1) * limit;
-//   const total = await User.countDocuments({ role: 'User' });
-//   const documents = await User.find({})
-//   .skip(skip).limit(_limit);
-//   res.json({ total, page: _page, limit: _limit, data: documents })
-// });
-//
-// //User Information find
-// exports.findUser = asyncHandler(async (req, res) => {
-//   const { params: { id } } = req;
-//   const user = await User.findById(id).select('-hashedPassword');
-//   if (!user) throw createError(404, 'User Not Found');
-//   res.json({ success: true, status: 200, message: `User ${id} Data`, data: user });
-// });
-//
-// //User Update
-// exports.updateUser = asyncHandler(async (req, res) => {
-//   const { body: $set, params: { id } } = req;
-//   delete $set.role;
-//   const nicknameDuple = await User.findOne({nickname: $set.nickname});
-//   const emailDuple = await User.findOne({email: $set.email});
-//   const user = await User.findById(id);
-//   if (!user) throw createError(404, 'User Not Found');
-//   if (emailDuple) throw createError(403, 'Email Already In Use');
-//   if (nicknameDuple) throw createError(403, 'Nickname Already In Use');
-//   await user.updateOne({ $set });
-//   res.json({ success: true, status: 200, message: 'User Info Updated' });
-// });
+const {updateFilesOf, removeFilesOf, validateCategory1, validateCategory2} = require('../services/post');
+const { POST_CATEGORY } = require('../constants')
 
 //Post Create
 exports.createPost = asyncHandler(async(req, res) =>{
-  const { body ,user, params: { category }} = req;
-    if(validateCategory(category) === false) {
+  const { body, body: {category: category2} ,user, params: { category: category1 }} = req;
+    if(!validateCategory1(category1)) {
         throw createError(400, 'No category');
     }
     const validationResult = createPostValidator(body);
-    if(validationResult !== true) throw createError(400, "Validation Failed");
-    body.category = category;
+    if(!validationResult) throw createError(400, "Validation Failed");
     const exData = body.files? await File.find({'_id' : { $in:
         body.files
             }}): [];
+    if(!category2) {
+        body.category2 = null;
+    } else {
+        body.category2 = category2;
+    }
+    if(category2 != null && !validateCategory2(category1, category2)) {
+        throw createError(400, "no category");
+    }
+    body.category1 = category1;
     body.images = exData.filter(file => ['image/gif', 'image/jpeg', 'image/png', 'image/bmp'].includes(file.mimetype)).map(image => image._id);
     body.files = exData.filter(file => !body.images.includes(file)).map(file => file._id);
     const data = await Post.create({...body, writer: user._id});
     user.posts.push(data._id);
     await user.save();
     await updateFilesOf(data, user);
-  res.json(createResponse(res, '', "Document created"))
+    res.json(createResponse(res, '', "Document created"))
 })
 
 //Post Delete
@@ -97,12 +72,11 @@ exports.getPosts = asyncHandler(asyncHandler(async(req, res) => {
     const sort = req.query.sort || undefined;
     const skip = limit * ((isNaN(page) ? 1 : page) - 1);
     const { category } = req.params;
-    if(validateCategory(category) === false) {
+    if(!validateCategory1(category)) {
         throw createError(400, 'No category');
     }
-    req.category = category;
-    const count = await Post.find(req.query).count();
-    const data = await Post.find(req.query).populate('writer', ['name']).limit(limit).skip(skip).sort(sort);
+    const count = await Post.find({category1 : category}).count();
+    const data = await Post.find({category1 : category}).populate('writer', ['name']).limit(limit).skip(skip).sort(sort);
     res.json({'status': 200, 'message':"ok", 'success': "true", count, data});
 }))
 
@@ -113,6 +87,20 @@ exports.getPost = asyncHandler((asyncHandler(async (req, res) => {
         throw createError(404, "no Post");
     }
     res.json(createResponse(res, data));
+})))
+
+exports.getPostsByCategory = asyncHandler((asyncHandler(async (req, res) => {
+    const { category1, category2 } = req.params;
+    const page = (req.query.page || 1);
+    const limit = (req.query.limit || 10);
+    const sort = req.query.sort || undefined;
+    const skip = limit * ((isNaN(page) ? 1 : page) - 1);
+    if(!validateCategory1(category1) || !validateCategory2(category1, category2)) {
+        throw createError(400, 'No category');
+    }
+    const count = await Post.find({category1, category2}).count();
+    const data = await Post.find({category1, category2}).populate('writer', ['name']).limit(limit).skip(skip).sort(sort);
+    res.json({'status': 200, 'message':"ok", 'success': "true", count, data});
 })))
 
 

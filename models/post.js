@@ -6,10 +6,13 @@ const schema = new mongoose.Schema({
       type: String,
       required: true,
     },
-    category: {
+    category1: {
       type: String,
-      enum: [...POST_CATEGORY],
+      enum: Object.keys(POST_CATEGORY),
       required: true,
+    },
+    category2: {
+        type: String,
     },
     content: {
       type: String,

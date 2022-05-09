@@ -15,6 +15,10 @@ exports.removeFilesOf = async (post, user) => {
     ])
 }
 
-exports.validateCategory = (category) => {
-    return POST_CATEGORY.includes(category);
+exports.validateCategory1 = (category) => {
+    return Object.keys(POST_CATEGORY).includes(category);
+}
+
+exports.validateCategory2 = (category1, category2) => {
+    return POST_CATEGORY[category1].includes(category2);
 }

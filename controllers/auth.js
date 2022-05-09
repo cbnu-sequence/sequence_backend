@@ -195,10 +195,10 @@ exports.kakaoLogin = asyncHandler(async(req,res)=>{
 })
 
 exports.changeUser = asyncHandler( async(req,res) => {
-   const { userId } = req.params;
-   if(!userId) {
-      throw createError(400, "userId is required")
+   const { email } = req.params;
+   if(!email) {
+      throw createError(400, "email is required")
    }
-   await User.findOneAndUpdate({_id: userId}, req.body);
+   await User.findOneAndUpdate({email}, req.body);
    res.json(createResponse(res,'',"modified"));
 });
