@@ -4,9 +4,9 @@ const fileTypes = [
 ];
 
 const postCategory = {
-    'notice': ['notice'],
-    'project': ['project'],
-    'sharingInfo': ['employment', 'activity', 'intern', 'campus', null],
+    'notice': ['notice', ,null],
+    'project': ['project', null],
+    'sharingInfo': ['employment', 'activity', 'intern', 'campus', 'etc', null],
 };
 
 exports.FILE_TYPES = fileTypes;

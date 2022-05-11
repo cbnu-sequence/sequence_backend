@@ -9,7 +9,7 @@ const File = require('../models/file')
 
 const uploadMiddleware = asyncHandler(async (req, res, next) => {
     if (!req.file) {
-        throw createError(400, "file not found");
+        throw createError(400, "해당 파일이 존재하지 않습니다.");
     }
 
     req.file = await File.create({
@@ -28,7 +28,7 @@ const download = asyncHandler(async (req, res, next) => {
 
     const file = await File.findById(id);
     if (!file) {
-        throw createError(400, "file not found");
+        throw createError(400, "해당 파일이 존재하지 않습니다.");
     }
     const filePath = join(ROOT_DIR, UPLOAD_DIR, basename(parse(file.url).pathname));
     res.download(filePath, file.filename);

@@ -8,13 +8,16 @@ const {updateFilesOf, removeFilesOf, validateCategory1, validateCategory2} = req
 const { POST_CATEGORY } = require('../constants')
 
 //Post Create
-exports.createPost = asyncHandler(async(req, res) =>{
+exports.createPost = asyncHandler(async(req, res)   =>{
   const { body, body: {category: category2} ,user, params: { category: category1 }} = req;
     if(!validateCategory1(category1)) {
-        throw createError(400, 'No category');
+        throw createError(400, '해당 카테고리는 존재하지 않습니다.');
+    }
+    if(category2 != null && !validateCategory2(category1, category2)) {
+        throw createError(400, "해당 세부 카테고리가 존재하지 않습니다.");
     }
     const validationResult = createPostValidator(body);
-    if(!validationResult) throw createError(400, "Validation Failed");
+    if(!validationResult) throw createError(400, "유효한 입력이 아닙니다.");
     const exData = body.files? await File.find({'_id' : { $in:
         body.files
             }}): [];
@@ -22,9 +25,6 @@ exports.createPost = asyncHandler(async(req, res) =>{
         body.category2 = null;
     } else {
         body.category2 = category2;
-    }
-    if(category2 != null && !validateCategory2(category1, category2)) {
-        throw createError(400, "no category");
     }
     body.category1 = category1;
     body.images = exData.filter(file => ['image/gif', 'image/jpeg', 'image/png', 'image/bmp'].includes(file.mimetype)).map(image => image._id);
@@ -40,7 +40,7 @@ exports.createPost = asyncHandler(async(req, res) =>{
  exports.deletePost = asyncHandler(async(req,res) => {
    const{params: { id } ,user} = req;
    const exContents = await Post.findById(id);
-   if(!exContents) throw createError(404,"Documents Not Found")
+   if(!exContents) throw createError(404,"해당 게시글이 존재하지 않습니다.")
    if(String(user._id) === String(exContents.writer))
    {
     await Post.deleteOne({_id:id});
@@ -49,20 +49,20 @@ exports.createPost = asyncHandler(async(req, res) =>{
     await user.save();
     res.json(createResponse(res, '', "Document deleted"))
    } else {
-       throw createError(403, "no Authentication");
+       throw createError(403, "해당 게시글에 접근할 수 없습니다.");
    }
  })
 
 exports.updatePost = asyncHandler(async(req, res) => {
     const{params: { id }, body , user} = req;
     const exContents = await Post.findById(id);
-    if(!exContents) throw createError(404,"Documents Not Found");
+    if(!exContents) throw createError(404,"해당 게시글이 존재하지 않습니다.");
     if(String(user._id) === String(exContents.writer))
     {
         await Post.updateOne({_id:id}, body);
         res.json(createResponse(res, '', "Document updated"));
     } else {
-        throw createError(403, "no authentication");
+        throw createError(403, "해당 게시글에 접근할 수 없습니다.");
     }
 })
 
@@ -73,7 +73,7 @@ exports.getPosts = asyncHandler(asyncHandler(async(req, res) => {
     const skip = limit * ((isNaN(page) ? 1 : page) - 1);
     const { category } = req.params;
     if(!validateCategory1(category)) {
-        throw createError(400, 'No category');
+        throw createError(400, '해당 카테고리가 존재하지 않습니다.');
     }
     const count = await Post.find({category1 : category}).count();
     const data = await Post.find({category1 : category}).populate('writer', ['name']).limit(limit).skip(skip).sort(sort);
@@ -84,7 +84,7 @@ exports.getPost = asyncHandler((asyncHandler(async (req, res) => {
     const { postId } = req.params;
     const data = await Post.findOne({_id: postId}).populate('writer', ['name']).populate('files', ['filename','url']).populate('images', ['filename','url']);
     if(!data) {
-        throw createError(404, "no Post");
+        throw createError(404, "해당 게시글을 찾을 수 없습니다.");
     }
     res.json(createResponse(res, data));
 })))
@@ -96,7 +96,7 @@ exports.getPostsByCategory = asyncHandler((asyncHandler(async (req, res) => {
     const sort = req.query.sort || undefined;
     const skip = limit * ((isNaN(page) ? 1 : page) - 1);
     if(!validateCategory1(category1) || !validateCategory2(category1, category2)) {
-        throw createError(400, 'No category');
+        throw createError(400, '해당 카테고리를 찾을 수 없습니다.');
     }
     const count = await Post.find({category1, category2}).count();
     const data = await Post.find({category1, category2}).populate('writer', ['name']).limit(limit).skip(skip).sort(sort);
