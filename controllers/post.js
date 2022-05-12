@@ -29,6 +29,7 @@ exports.createPost = asyncHandler(async(req, res)   =>{
     body.category1 = category1;
     body.images = exData.filter(file => ['image/gif', 'image/jpeg', 'image/png', 'image/bmp'].includes(file.mimetype)).map(image => image._id);
     body.files = exData.filter(file => !body.images.includes(file)).map(file => file._id);
+    body.writer = user;
     const data = await Post.create({...body, writer: user._id});
     user.posts.push(data._id);
     await user.save();
@@ -76,13 +77,13 @@ exports.getPosts = asyncHandler(asyncHandler(async(req, res) => {
         throw createError(400, '해당 카테고리가 존재하지 않습니다.');
     }
     const count = await Post.find({category1 : category}).count();
-    const data = await Post.find({category1 : category}).populate('writer', ['name']).limit(limit).skip(skip).sort(sort);
+    const data = await Post.find({category1 : category}).populate('writer', ['name', 'role']).limit(limit).skip(skip).sort(sort);
     res.json({'status': 200, 'message':"ok", 'success': "true", count, data});
 }))
 
 exports.getPost = asyncHandler((asyncHandler(async (req, res) => {
     const { postId } = req.params;
-    const data = await Post.findOne({_id: postId}).populate('writer', ['name']).populate('files', ['filename','url']).populate('images', ['filename','url']);
+    const data = await Post.findOne({_id: postId}).populate('writer', ['name', 'role']).populate('files', ['filename','url']).populate('images', ['filename','url']);
     if(!data) {
         throw createError(404, "해당 게시글을 찾을 수 없습니다.");
     }
@@ -99,7 +100,7 @@ exports.getPostsByCategory = asyncHandler((asyncHandler(async (req, res) => {
         throw createError(400, '해당 카테고리를 찾을 수 없습니다.');
     }
     const count = await Post.find({category1, category2}).count();
-    const data = await Post.find({category1, category2}).populate('writer', ['name']).limit(limit).skip(skip).sort(sort);
+    const data = await Post.find({category1, category2}).populate('writer', ['name', 'role']).limit(limit).skip(skip).sort(sort);
     res.json({'status': 200, 'message':"ok", 'success': "true", count, data});
 })))
 

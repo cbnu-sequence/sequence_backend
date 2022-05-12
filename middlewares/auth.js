@@ -20,7 +20,7 @@ exports.hasRole = asyncHandler(async(req,res,next) => {
 
 exports.verifiedUser = asyncHandler(async(req,res,next) => {
    const userId = req.session.userId;
-   if(!userId) throw createError(403, "You Are Not Logged In");
+   if(!userId) throw createError(403, "로그인 되어있지 않습니다.");
    req.user = await User.findById(userId);
    if(!req.user.valid) throw createError(400, "이메일 인증이 필요합니다.");
    return next();
