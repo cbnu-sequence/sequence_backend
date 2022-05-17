@@ -77,13 +77,20 @@ exports.getPosts = asyncHandler(asyncHandler(async(req, res) => {
         throw createError(400, '해당 카테고리가 존재하지 않습니다.');
     }
     const count = await Post.find({category1 : category}).count();
-    const data = await Post.find({category1 : category}).populate('writer', ['name', 'role']).limit(limit).skip(skip).sort(sort);
+    const data = await Post.find({category1 : category})
+        .populate('writer', ['name', 'role'])
+        .populate('files', ['filename','url'])
+        .populate('images', ['filename','url'])
+        .limit(limit).skip(skip).sort(sort);
     res.json({'status': 200, 'message':"ok", 'success': "true", count, data});
 }))
 
 exports.getPost = asyncHandler((asyncHandler(async (req, res) => {
     const { postId } = req.params;
-    const data = await Post.findOne({_id: postId}).populate('writer', ['name', 'role']).populate('files', ['filename','url']).populate('images', ['filename','url']);
+    const data = await Post.findOne({_id: postId})
+        .populate('writer', ['name', 'role'])
+        .populate('files', ['filename','url'])
+        .populate('images', ['filename','url']);
     if(!data) {
         throw createError(404, "해당 게시글을 찾을 수 없습니다.");
     }
@@ -100,7 +107,11 @@ exports.getPostsByCategory = asyncHandler((asyncHandler(async (req, res) => {
         throw createError(400, '해당 카테고리를 찾을 수 없습니다.');
     }
     const count = await Post.find({category1, category2}).count();
-    const data = await Post.find({category1, category2}).populate('writer', ['name', 'role']).limit(limit).skip(skip).sort(sort);
+    const data = await Post.find({category1, category2})
+        .populate('writer', ['name', 'role'])
+        .populate('files', ['filename','url'])
+        .populate('images', ['filename','url'])
+        .limit(limit).skip(skip).sort(sort);
     res.json({'status': 200, 'message':"ok", 'success': "true", count, data});
 })))
 
