@@ -3,6 +3,7 @@ const app = express();
 const authRoutes = require('./routes/auth');
 const postRoutes = require('./routes/post');
 const fileRoutes = require('./routes/file');
+const projectRoutes = require('./routes/project');
 const { notFound, errorHandler } = require("./errors/handler");
 const morgan = require("morgan");
 const bodyParser = require('body-parser');
@@ -47,6 +48,7 @@ app.use(bodyParser.json())
 app.use('/auth', authRoutes);
 app.use('/post', postRoutes);
 app.use('/file', fileRoutes);
+app.use('/project', projectRoutes);
 app.use(notFound);
 app.use(errorHandler);
 module.exports = app;

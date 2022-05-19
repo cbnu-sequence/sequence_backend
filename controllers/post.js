@@ -5,7 +5,6 @@ const Post = require('../models/post');
 const File = require('../models/file');
 const {createResponse} = require('../util/response');
 const {updateFilesOf, removeFilesOf, validateCategory1, validateCategory2} = require('../services/post');
-const { POST_CATEGORY } = require('../constants')
 
 //Post Create
 exports.createPost = asyncHandler(async(req, res)   =>{
@@ -28,7 +27,7 @@ exports.createPost = asyncHandler(async(req, res)   =>{
     }
     body.category1 = category1;
     body.images = exData.filter(file => ['image/gif', 'image/jpeg', 'image/png', 'image/bmp'].includes(file.mimetype)).map(image => image._id);
-    body.files = exData.filter(file => !body.images.includes(file)).map(file => file._id);
+    body.files = exData.filter(file => !['image/gif', 'image/jpeg', 'image/png', 'image/bmp'].includes(file.mimetype)).map(file => file._id);
     body.writer = user;
     const data = await Post.create({...body, writer: user._id});
     user.posts.push(data._id);

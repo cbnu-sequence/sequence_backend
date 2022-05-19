@@ -2,7 +2,6 @@ const {updateFilesByUrls, removeFilesByUrls, updateFilesByIds, removeFilesByIds}
 const { POST_CATEGORY } = require('../constants')
 exports.updateFilesOf = async (post, user) => {
     const ids = (post.files || []);
-    console.log(post._id);
     await Promise.all([
         updateFilesByIds(user, post._id, 'Post', ids),
     ]);
