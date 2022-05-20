@@ -57,12 +57,13 @@ exports.updateProject = asyncHandler(async(req, res) => {
 
 // 프로젝트들 가져오기
 exports.getProjects = asyncHandler(asyncHandler(async(req, res) => {
+    const {query} = req;
     const page = (req.query.page || 1);
     const limit = (req.query.limit || 10);
     const sort = req.query.sort || undefined;
     const skip = limit * ((isNaN(page) ? 1 : page) - 1);
-    const count = await Project.find().count();
-    const data = await Project.find()
+    const count = await Project.find(query).count();
+    const data = await Project.find(query)
         .populate('writer', ['name', 'role'])
         .populate('images', ['filename','url'])
         .populate('participants', ['email', 'name', 'role'])

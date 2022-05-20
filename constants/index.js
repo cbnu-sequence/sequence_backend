@@ -5,7 +5,6 @@ const fileTypes = [
 
 const postCategory = {
     'notice': ['notice', ,null],
-    'project': ['project', null],
     'sharingInfo': ['employment', 'activity', 'intern', 'campus', 'etc', null],
 };
 

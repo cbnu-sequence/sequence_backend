@@ -3,9 +3,9 @@ const router = express.Router();
 const controller = require('../controllers/project');
 const { requiredLogin, hasRole, verifiedUser } = require('../middlewares/auth')
 
-router.post("/", verifiedUser, controller.createProject);
-router.put("/:projectId", verifiedUser, controller.updateProject);
-router.delete("/:projectId", verifiedUser, controller.deleteProject);
+router.post("/", hasRole, controller.createProject);
+router.put("/:projectId", hasRole, controller.updateProject);
+router.delete("/:projectId", hasRole, controller.deleteProject);
 router.get("/", controller.getProjects);
 router.get("/:projectId", controller.getProject);
 
