@@ -25,8 +25,8 @@ exports.register = asyncHandler(async(req, res) => {
    if(emailDuple) throw createError(400,"현재 이메일을 사용할 수 없습니다.");
    const phoneNumberDuple = await User.findOne({phoneNumber:body.phoneNumber});
    if(phoneNumberDuple) throw createError(400,"현재 전화번호를 사용할 수 없습니다.");
-   const hashedPassword = await bcrypt.hash(body.password, 12);
-
+   const salt = bcrypt.genSaltSync(12);
+   const hashedPassword = bcrypt.hashSync(body.password, salt);
    const user = await User.create({...body, password: hashedPassword, code:null});
 
    // 토큰 생성
@@ -107,12 +107,14 @@ exports.login = asyncHandler(async(req,res) => {
    const {body} = req;
    const exUser = await User.findOne({email:body.email});
    if(!exUser) throw createError(400,"이메일 또는 비밀번호를 찾을 수 없습니다.");
-   const isPasswordCorrect = await bcrypt.compare(body.password, exUser.password);
-   if(isPasswordCorrect){
+   const isCorrectPassword = bcrypt.compareSync(body.password, exUser.password);
+   if(isCorrectPassword) {
       req.session.userId = exUser.id;
       req.session.save();
       res.json(createResponse(res, {userId : exUser._id}));
-   } else throw createError(403, "이메일 또는 비밀번호를 찾을 수 없습니다.");
+   } else {
+      throw createError(403, "이메일 또는 비밀번호를 찾을 수 없습니다.");
+   }
 })
 
 exports.getme = asyncHandler(async(req,res) => {
