@@ -1,23 +1,24 @@
 {
   "name": "session-practice",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "build": "esbuild index.js --outfile=build.js --bundle --minify --platform=node"
   },
   "keywords": [],
-  "author": "",
+  "author": "ckyeon <qsky8520@gmail.com>",
   "license": "ISC",
   "dependencies": {
     "axios": "^0.24.0",
-    "bcrypt": "^5.0.1",
+    "bcrypt-nodejs": "^0.0.3",
     "body-parser": "^1.19.1",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "dotenv": "^10.0.0",
     "ejs": "^3.1.6",
+    "esbuild": "^0.14.39",
     "express": "^4.17.2",
     "express-async-handler": "^1.1.4",
     "express-mongodb-session": "^3.2.1",
@@ -34,5 +35,12 @@
     "nodemon": "^2.0.15",
     "path": "^0.12.7",
     "uuid": "^8.3.2"
-  }
+  },
+  "repository": "git+https://github.com/cbnu-sequence/sequence_backend.git",
+  "bugs": {
+    "url": "https://github.com/cbnu-sequence/sequence_backend/issues"
+  },
+  "homepage": "https://github.com/cbnu-sequence/sequence_backend#readme",
+  "devDependencies": {},
+  "description": ""
 }
