@@ -1,5 +1,4 @@
 FROM node:16-alpine AS builder
-ENV NODE_ENV production
 
 WORKDIR /usr/src/app
 
@@ -13,8 +12,10 @@ RUN yarn build
 
 
 FROM node:16-alpine AS production
+ENV NODE_ENV production
 
 COPY --from=builder /usr/src/app/build.js .
+COPY --from=builder /usr/src/app/.env .
 
 EXPOSE 4000
 CMD [ "node", "build.js" ]
