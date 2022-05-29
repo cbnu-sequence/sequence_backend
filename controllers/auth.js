@@ -174,7 +174,8 @@ exports.kakaoLogin = asyncHandler(async(req,res)=>{
    const userId = user.data.id;
    const userEmail = user.data.kakao_account.email + ":kakao";
    const userName = user.data.properties.nickname;
-   const password = await bcrypt.hash(Math.random().toString(36).substr(2,11), 12)
+   const salt = bcrypt.genSaltSync(12);
+   const password = bcrypt.hashSync(Math.random().toString(36).substr(2,11), salt);
    const exUser = await User.findOne({code:userId});
    if(exUser)
    {
