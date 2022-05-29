@@ -2,8 +2,8 @@ FROM node:16-alpine AS builder
 
 WORKDIR /usr/src/app
 
-COPY package*.json .
-COPY yarn.lock .
+COPY package*.json ./
+COPY yarn.lock ./
 RUN yarn install --production
 
 COPY . .
@@ -16,6 +16,7 @@ ENV NODE_ENV production
 
 COPY --from=builder /usr/src/app/build.js .
 COPY --from=builder /usr/src/app/.env .
+COPY --from=builder /usr/src/app/resources/user/mail.ejs ./resources/user/mail.ejs
 
 EXPOSE 4000
 CMD [ "node", "build.js" ]
