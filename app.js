@@ -22,7 +22,7 @@ app.use(
 app.use("", express.static(__dirname));
 
 app.use(cors({
-    origin:"http://localhost:3000",
+    origin:true,
     credentials: true
 }));
 
@@ -37,7 +37,7 @@ app.use(
       resave: false,
       saveUninitialized: false,
       secret: SESSION_SECRET,
-       store: store,
+      store: store,
       cookie: {
          secure: false,
          maxAge: 10 * 1000 * 60 * 60 * 24,

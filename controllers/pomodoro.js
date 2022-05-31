@@ -92,3 +92,23 @@ exports.getPomodorosRankingByMonth = asyncHandler(async(req, res)   =>{
 
     res.json(createResponse(res, doc));
 })
+
+exports.getPomodorosByUser = asyncHandler(async(req, res)   =>{
+    const { user } = req;
+
+    const doc = await Pomodoro.find({writer: user});
+    res.json(createResponse(res, doc));
+})
+
+exports.getPomodoros = asyncHandler(async(req, res) => {
+    const { pomodoroId } = req.params;
+
+    const doc = await Pomodoro.find({_id : pomodoroId});
+    res.json(createResponse(res, doc));
+})
+
+exports.getPomodoro = asyncHandler(async(req, res)  => {
+    const doc = await Pomodoro.find({});
+
+    res.json(createResponse(res, doc));
+})
