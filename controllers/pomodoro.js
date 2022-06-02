@@ -28,8 +28,11 @@ exports.createPomodoro = asyncHandler(async(req, res)   =>{
     }
 
     const doc = await Pomodoro.create({...body, writer : user, startDate, endDate: startDate, sequence});
-
-    res.json(createResponse(res, doc, "뽀모도로가 생성되었습니다."));
+    const response = {
+        _id : doc._id,
+        startDate: doc.startDate,
+    }
+    res.json(createResponse(res, response, "뽀모도로가 생성되었습니다."));
 })
 
 //뽀모도로 제출(두번째 요청)
