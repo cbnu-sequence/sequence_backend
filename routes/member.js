@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const controller = require('../controllers/member');
-const { requiredLogin, verifiedUser } = require('../middlewares/auth')
+const { requiredLogin, verifiedUser, hasRole} = require('../middlewares/auth')
 
-router.post('/', verifiedUser, controller.enrollMember);
-router.get('/:team', controller.getMembersByProject);
-router.get('/:team', controller.getMembersByTechCourse);
+router.post('/user', verifiedUser, controller.changeMemberByUser);
+router.post('/admin', hasRole, controller.changeMemberByAdmin);
+router.get('/:team', controller.getMembersByTeam);
 
 module.exports = router;

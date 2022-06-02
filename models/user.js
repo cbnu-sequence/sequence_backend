@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const {ROLES} = require("../constants");
 
 const schema = new mongoose.Schema({
    code: {
@@ -24,7 +25,7 @@ const schema = new mongoose.Schema({
    },
    role : {
       type: String,
-      enum: ['Admin', 'User', 'Member'], // Added Role : Member
+      enum: ROLES,
       default: 'User'
    },
    valid: {
@@ -35,7 +36,11 @@ const schema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Post',
       required: true,
-    }]
+    }],
+   member: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Member',
+   }
 },{
    timestamps: true
 });

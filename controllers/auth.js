@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt-nodejs');
 const User = require('../models/user');
 const Token = require('../models/token');
+const Member = require('../models/member');
 const registerValidator = require("../validators/register");
 const asyncHandler = require('express-async-handler');
 const createError = require('http-errors');
@@ -28,6 +29,8 @@ exports.register = asyncHandler(async(req, res) => {
    const salt = bcrypt.genSaltSync(12);
    const hashedPassword = bcrypt.hashSync(body.password, salt);
    const user = await User.create({...body, password: hashedPassword, code:null});
+   const member = await Member.create({user});
+   await User.updateOne({user}, {member});
 
    // 토큰 생성
    let token;
@@ -76,7 +79,6 @@ exports.resendMail = asyncHandler(async (req, res) => {
       email: user.email,
       ttl: 600 // ttl 값 설정 (10분)
    };
-   console.log(token);
    await Token.create({key: data.token, email: data.email, ttl: data.ttl});
    await sendMail(user.email,"이메일 인증 메일입니다.", token);
    res.json(createResponse(res));
@@ -119,7 +121,7 @@ exports.login = asyncHandler(async(req,res) => {
 
 exports.getme = asyncHandler(async(req,res) => {
    const { user } = req;
-   const data = await User.findOne(user).populate("posts");
+   const data = await User.findOne(user).populate("posts").populate("member");
    res.json(createResponse(res, data));
 })
 
@@ -190,8 +192,10 @@ exports.kakaoLogin = asyncHandler(async(req,res)=>{
          email:userEmail,
          name:userName,
          password: password,
-         valid: true
+         valid: true,
       });
+      const member = await Member.create({user: newUser});
+      await User.updateOne({user: newUser}, {member});
       req.session.userId = newUser.id
       req.session.save()
       res.json(createResponse(res, '', 'User Registered And Logged In'));

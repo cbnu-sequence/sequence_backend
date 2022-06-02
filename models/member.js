@@ -1,22 +1,32 @@
 const mongoose = require('mongoose');
+const {TEAMS} = require("../constants");
 
 const schema = new mongoose.Schema({
-    writer: {
+    user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'User',
+        required: true,
     },
     team: {
         type: String,
-        enum: ['Project', 'TechCourse', null],
+        enum: TEAMS,
         default: null
     },
     githubUrl: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Project'
+        type: String,
+        default: null,
     },
-    projectUrl: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Project'
+    otherUrls: [{
+        type: String,
+        default: null,
+    }],
+    comment: {
+        type: String,
+        default: null,
+    },
+    part: {
+        type: String,
+        default: null,
     }
 },{
     timestamps: true
