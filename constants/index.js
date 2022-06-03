@@ -30,8 +30,17 @@ const roles = [
     'Member',
 ]
 
+const parts = [
+    'backend',
+    'frontend',
+    'devops',
+    'ios',
+    'aos',
+]
+
 
 exports.FILE_TYPES = fileTypes;
 exports.POST_CATEGORY = postCategory;
 exports.TEAMS = teams;
 exports.ROLES = roles;
+exports.PARTS = parts;
