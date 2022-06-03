@@ -6,7 +6,7 @@ const Project = require('../models/project');
 const User = require('../models/user');
 const Member = require('../models/member');
 const {createResponse} = require('../util/response');
-const {verifyTeam} = require("../services/member");
+const {verifyTeam, verifyParts} = require("../services/member");
 
 exports.changeMemberByUser = asyncHandler(async(req, res) => {
     const { body, user } = req;
@@ -35,7 +35,12 @@ exports.changeMemberByUser = asyncHandler(async(req, res) => {
 exports.changeMemberByAdmin = asyncHandler(async(req, res) => {
     const { body } = req;
 
-    verifyTeam(body.team);
+    if(body.team){
+        verifyTeam(body.team);
+    }
+    if(body.part) {
+        verifyParts(body.part);
+    }
 
     const user = await User.findOne({email: body.email});
 
@@ -55,9 +60,9 @@ exports.changeMemberByAdmin = asyncHandler(async(req, res) => {
 })
 
 exports.getMembersByTeam = asyncHandler(async(req, res)=> {
-    const {params: {team}} = req;
-    const count = await Member.find({team}).count();
-    const data = await Member.find({team})
+    const {params, query} = req;
+    const count = await Member.find({...params, ...query}).count();
+    const data = await Member.find({...params, ...query})
         .populate('user', ['name', 'email', 'role'])
     res.json({'status': 200, 'message': 'ok', 'success': 'true', count, data});
 })

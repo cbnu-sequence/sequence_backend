@@ -31,6 +31,7 @@ exports.createPomodoro = asyncHandler(async(req, res)   =>{
     const response = {
         _id : doc._id,
         startDate: doc.startDate,
+        title: doc.title,
     }
     res.json(createResponse(res, response, "뽀모도로가 생성되었습니다."));
 })
