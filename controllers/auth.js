@@ -7,13 +7,8 @@ const asyncHandler = require('express-async-handler');
 const createError = require('http-errors');
 const {sendMail} = require('../util/mail');
 const {createResponse} = require('../util/response')
-const qs = require('qs');
-const axios = require("axios")
-const {
-   KAKAO_REROUTING,
-   KAKAO_CLIENT_ID,
-   KAKAO_CLIENT_SECRET
-} = require('../configs')
+
+const {createToken, getKakaoToken, getUserByKakaoToken} = require("../services/auth");
 
 
 exports.register = asyncHandler(async(req, res) => {
@@ -26,29 +21,20 @@ exports.register = asyncHandler(async(req, res) => {
    if(emailDuple) throw createError(400,"현재 이메일을 사용할 수 없습니다.");
    const phoneNumberDuple = await User.findOne({phoneNumber:body.phoneNumber});
    if(phoneNumberDuple) throw createError(400,"현재 전화번호를 사용할 수 없습니다.");
+
    const salt = bcrypt.genSaltSync(12);
    const hashedPassword = bcrypt.hashSync(body.password, salt);
    const user = await User.create({...body, password: hashedPassword, code:null});
    const member = await Member.create({user});
    await User.updateOne({user}, {member});
 
-   // 토큰 생성
-   let token;
-   while (true) {
-      token = ''
-      for (let i = 0; i < 6; i++) {
-         token += String(Math.floor(Math.random() * 10))
-      }
-      const val = await Token.findOne({key: token})
-      if(!val) {
-         break
-      }
-   }
+   const token = await createToken();
    const data = {
       token,
       email: body.email,
       ttl: 600 // ttl 값 설정 (10분)
    };
+
    await Token.create({key: data.token, email: data.email, ttl: data.ttl});
 
    // 메일 전송
@@ -63,29 +49,22 @@ exports.resendMail = asyncHandler(async (req, res) => {
    }
    await Token.findOneAndDelete({email: user.email});
    // 토큰 생성
-   let token;
-   while (true) {
-      token = ''
-      for (let i = 0; i < 6; i++) {
-         token += String(Math.floor(Math.random() * 10))
-      }
-      const val = await Token.findOne({key: token})
-      if(!val) {
-         break
-      }
-   }
+   const token = await createToken();
    const data = {
       token,
       email: user.email,
       ttl: 600 // ttl 값 설정 (10분)
    };
+
    await Token.create({key: data.token, email: data.email, ttl: data.ttl});
    await sendMail(user.email,"이메일 인증 메일입니다.", token);
+
    res.json(createResponse(res));
 })
 
 exports.changeValidEmail = asyncHandler(async (req, res) => {
    const {token} = req.body;
+
    if(!token) {
       throw createError(400,"토큰을 찾을 수 없습니다.");
    }
@@ -102,13 +81,17 @@ exports.changeValidEmail = asyncHandler(async (req, res) => {
    // 이메일을 사용 가능하도록 변경
    await User.findOneAndUpdate({email: data.email}, {$set: {valid: 1}});
    await Token.deleteOne({_id: data._id});
+
    res.json(createResponse(res,'','Change validate Email'));
 })
 
 exports.login = asyncHandler(async(req,res) => {
    const {body} = req;
+
    const exUser = await User.findOne({email:body.email});
+
    if(!exUser) throw createError(400,"이메일 또는 비밀번호를 찾을 수 없습니다.");
+
    const isCorrectPassword = bcrypt.compareSync(body.password, exUser.password);
    if(isCorrectPassword) {
       req.session.userId = exUser.id;
@@ -121,7 +104,11 @@ exports.login = asyncHandler(async(req,res) => {
 
 exports.getme = asyncHandler(async(req,res) => {
    const { user } = req;
-   const data = await User.findOne(user).populate("posts").populate("member");
+
+   const data = await User.findOne(user)
+       .populate("posts")
+       .populate("member");
+
    res.json(createResponse(res, data));
 })
 
@@ -140,36 +127,14 @@ exports.logout = asyncHandler( async(req,res) => {
 exports.kakaoLogin = asyncHandler(async(req,res)=>{
    const { code, accessToken } = req.query;
    if(!code && !accessToken) throw createError(400, "엑세스 토큰 또는 코드를 찾을 수 없습니다.");
+
    let token;
    if(!accessToken) {
-      token = await axios({//token
-         method: 'POST',
-         url: 'https://kauth.kakao.com/oauth/token',
-         headers:{
-            'content-type':'application/x-www-form-urlencoded'
-         },
-         data:qs.stringify({
-            grant_type: 'authorization_code',
-            client_id:KAKAO_CLIENT_ID,
-            client_secret:KAKAO_CLIENT_SECRET,
-            redirectUri:KAKAO_REROUTING,
-            code,
-         })
-      }).catch(err => console.log(err))
-      if(!token) {
-         throw createError(400, '토큰이 존재하지 않습니다.');
-      }
+      token = await getKakaoToken();
    }
-   const user = await axios({
-      method:'get',
-      url:'https://kapi.kakao.com/v2/user/me',
-      headers:{
-         Authorization: `Bearer ${accessToken? accessToken : token.data.access_token}`
-      },
-      params: {
-         property_keys:["properties.nickname","kakao_account.email"]
-      }
-   }).catch(err => console.log(err))
+
+   const user = await getUserByKakaoToken(accessToken, token);
+
    if(!user) {
       throw createError(400, "토큰으로 유저를 찾을 수 없습니다.")
    }
@@ -179,14 +144,9 @@ exports.kakaoLogin = asyncHandler(async(req,res)=>{
    const salt = bcrypt.genSaltSync(12);
    const password = bcrypt.hashSync(Math.random().toString(36).substr(2,11), salt);
    const exUser = await User.findOne({code:userId});
-   if(exUser)
-   {
+   if(exUser) {
       req.session.userId = exUser.id
-      req.session.save()
-      res.json(createResponse(res, '', "User Logged In"));
-   }
-   else if(!exUser)
-   {
+   } else {
       const newUser = await User.create({
          code:userId,
          email:userEmail,
@@ -194,12 +154,14 @@ exports.kakaoLogin = asyncHandler(async(req,res)=>{
          password: password,
          valid: true,
       });
+
       const member = await Member.create({user: newUser});
       await User.updateOne({user: newUser}, {member});
-      req.session.userId = newUser.id
-      req.session.save()
-      res.json(createResponse(res, '', 'User Registered And Logged In'));
+
+      req.session.userId = newUser.id;
    }
+   req.session.save()
+   res.json(createResponse(res, '', "로그인되었습니다."));
 })
 
 exports.changeUser = asyncHandler( async(req,res) => {
@@ -208,5 +170,6 @@ exports.changeUser = asyncHandler( async(req,res) => {
       throw createError(400, "변경하려는 이메일이 존재하지 않습니다.")
    }
    await User.findOneAndUpdate({email}, req.body);
+
    res.json(createResponse(res,'',"modified"));
 });
