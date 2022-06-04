@@ -100,10 +100,12 @@ exports.getPomodorosRankingByMonth = asyncHandler(async(req, res)   =>{
 })
 
 exports.getPomodorosByUser = asyncHandler(async(req, res)   =>{
-    const { user } = req;
+    const { user, limit, sort, skip } = req;
 
-    const doc = await Pomodoro.find({writer: user, isFinished: true});
-    res.json(createPagingResponse(res, doc.length, doc));
+    const doc = await Pomodoro.find({writer: user, isFinished: true}).limit(limit).sort(sort).skip(skip);
+
+    const count = await Pomodoro.find({writer: user, isFinished: true}).count();
+    res.json(createPagingResponse(res, count, doc));
 })
 
 exports.getPomodoro = asyncHandler(async(req, res) => {
@@ -117,6 +119,6 @@ exports.getPomodoros = asyncHandler(async(req, res)  => {
     const { limit, sort, skip } = req;
     const doc = await Pomodoro.find({isFinished: true}).sort(sort).limit(limit).skip(skip);
 
-    const count = await Pomodoro.find({isFinished: true});
+    const count = await Pomodoro.find({isFinished: true}).count();
     res.json(createPagingResponse(res, count, doc));
 })
