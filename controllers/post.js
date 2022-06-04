@@ -88,7 +88,8 @@ exports.getPosts = asyncHandler(asyncHandler(async(req, res) => {
         .populate('images', ['filename','url'])
         .limit(limit).skip(skip).sort(sort);
 
-    res.json(createPagingResponse(res, data.length, data));
+    const count = await Post.find({category1 : category}).count();
+    res.json(createPagingResponse(res, count, data));
 }))
 
 exports.getPost = asyncHandler((asyncHandler(async (req, res) => {
@@ -119,5 +120,7 @@ exports.getPostsByCategory = asyncHandler((asyncHandler(async (req, res) => {
         .populate('images', ['filename','url'])
         .limit(limit).skip(skip).sort(sort);
 
-    res.json(createPagingResponse(res, data.length, data));
+    const count = await Post.find({category1, category2}).count();
+
+    res.json(createPagingResponse(res, count, data));
 })))

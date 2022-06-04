@@ -63,5 +63,5 @@ exports.getMembersByTeam = asyncHandler(async(req, res)=> {
     const data = await Member.find({...params, ...query})
         .populate('user', ['name', 'email', 'role'])
 
-    res.json(createPagingResponse(res, data.length, data));
+    res.json(createResponse(res, data));
 })

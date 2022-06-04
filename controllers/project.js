@@ -64,7 +64,10 @@ exports.getProjects = asyncHandler(asyncHandler(async(req, res) => {
         .populate('images', ['filename','url'])
         .populate('participants', ['email', 'name', 'role'])
         .limit(limit).skip(skip).sort(sort);
-    res.json(createPagingResponse(res, data.length, data));
+
+    const count = await Project.find(query).count();
+
+    res.json(createPagingResponse(res, count, data));
 }))
 
 // 프로젝트 하나 가져오기
