@@ -16,6 +16,7 @@
     "body-parser": "^1.19.1",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
+    "dayjs": "^1.11.2",
     "dotenv": "^10.0.0",
     "ejs": "^3.1.6",
     "esbuild": "^0.14.39",
@@ -41,6 +42,5 @@
     "url": "https://github.com/cbnu-sequence/sequence_backend/issues"
   },
   "homepage": "https://github.com/cbnu-sequence/sequence_backend#readme",
-  "devDependencies": {},
   "description": ""
 }

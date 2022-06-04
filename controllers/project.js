@@ -4,7 +4,7 @@ const createProjectValidator = require("../validators/createProject");
 const File = require('../models/file');
 const User = require('../models/user');
 const Project = require('../models/project');
-const {createResponse} = require('../util/response');
+const {createResponse, createPagingResponse} = require('../util/response');
 const {updateFilesOf, removeFilesOf} = require("../services/project");
 
 // 프로젝트 생성
@@ -57,18 +57,17 @@ exports.updateProject = asyncHandler(async(req, res) => {
 
 // 프로젝트들 가져오기
 exports.getProjects = asyncHandler(asyncHandler(async(req, res) => {
-    const {query} = req;
-    const page = (req.query.page || 1);
-    const limit = (req.query.limit || 10);
-    const sort = req.query.sort || undefined;
-    const skip = limit * ((isNaN(page) ? 1 : page) - 1);
-    const count = await Project.find(query).count();
+    const {query, limit, sort, skip} = req;
+
     const data = await Project.find(query)
         .populate('writer', ['name', 'role'])
         .populate('images', ['filename','url'])
         .populate('participants', ['email', 'name', 'role'])
         .limit(limit).skip(skip).sort(sort);
-    res.json({'status': 200, 'message':"ok", 'success': "true", count, data});
+
+    const count = await Project.find(query).count();
+
+    res.json(createPagingResponse(res, count, data));
 }))
 
 // 프로젝트 하나 가져오기

@@ -1,11 +1,9 @@
 const asyncHandler = require('express-async-handler');
 const createError = require('http-errors');
 const enrollMemberValidator = require("../validators/enrollMember");
-const Post = require('../models/post');
-const Project = require('../models/project');
 const User = require('../models/user');
 const Member = require('../models/member');
-const {createResponse} = require('../util/response');
+const {createResponse, createPagingResponse} = require('../util/response');
 const {verifyTeam, verifyParts} = require("../services/member");
 
 exports.changeMemberByUser = asyncHandler(async(req, res) => {
@@ -61,8 +59,9 @@ exports.changeMemberByAdmin = asyncHandler(async(req, res) => {
 
 exports.getMembersByTeam = asyncHandler(async(req, res)=> {
     const {params, query} = req;
-    const count = await Member.find({...params, ...query}).count();
+
     const data = await Member.find({...params, ...query})
         .populate('user', ['name', 'email', 'role'])
-    res.json({'status': 200, 'message': 'ok', 'success': 'true', count, data});
+
+    res.json(createResponse(res, data));
 })

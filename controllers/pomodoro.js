@@ -1,7 +1,8 @@
 const asyncHandler = require('express-async-handler');
 const createError = require('http-errors');
 const Pomodoro = require('../models/pomodoro');
-const {createResponse} = require('../util/response');
+const dayjs = require('dayjs');
+const {createResponse, createPagingResponse} = require('../util/response');
 const {getPomodorosRankingByTime, getWeekFirstDay, getWeekLastDay} = require("../services/pomodoro");
 
 //뽀모도로 만들기(첫번째 요청)
@@ -21,8 +22,9 @@ exports.createPomodoro = asyncHandler(async(req, res)   =>{
     }).sort("-endDate").limit(1);
 
     let sequence = 1;
+
     if(lastDoc.length != 0) {
-        if((new Date(startDate).getTime() - lastDoc[0].endDate.getTime()) / (60 * 1000) <= 7) {
+        if((dayjs(lastDoc[0].endDate).diff(startDate, 'minute')) <= 7) {
             sequence = lastDoc[0].sequence + 1;
         }
     }
@@ -100,19 +102,21 @@ exports.getPomodorosRankingByMonth = asyncHandler(async(req, res)   =>{
 exports.getPomodorosByUser = asyncHandler(async(req, res)   =>{
     const { user } = req;
 
-    const doc = await Pomodoro.find({writer: user});
+    const doc = await Pomodoro.find({writer: user, isFinished: true});
+    res.json(createPagingResponse(res, doc.length, doc));
+})
+
+exports.getPomodoro = asyncHandler(async(req, res) => {
+    const { params: {pomodoroId}} = req;
+
+    const doc = await Pomodoro.find({_id : pomodoroId, isFinished: true});
     res.json(createResponse(res, doc));
 })
 
-exports.getPomodoros = asyncHandler(async(req, res) => {
-    const { pomodoroId } = req.params;
+exports.getPomodoros = asyncHandler(async(req, res)  => {
+    const { limit, sort, skip } = req;
+    const doc = await Pomodoro.find({isFinished: true}).sort(sort).limit(limit).skip(skip);
 
-    const doc = await Pomodoro.find({_id : pomodoroId});
-    res.json(createResponse(res, doc));
-})
-
-exports.getPomodoro = asyncHandler(async(req, res)  => {
-    const doc = await Pomodoro.find({});
-
-    res.json(createResponse(res, doc));
+    const count = await Pomodoro.find({isFinished: true});
+    res.json(createPagingResponse(res, count, doc));
 })
