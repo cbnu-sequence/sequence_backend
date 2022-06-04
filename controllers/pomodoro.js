@@ -106,15 +106,16 @@ exports.getPomodorosByUser = asyncHandler(async(req, res)   =>{
     res.json(createPagingResponse(res, doc.length, doc));
 })
 
-exports.getPomodoros = asyncHandler(async(req, res) => {
-    const { pomodoroId } = req.params;
+exports.getPomodoro = asyncHandler(async(req, res) => {
+    const { params: {pomodoroId}} = req;
 
     const doc = await Pomodoro.find({_id : pomodoroId});
-    res.json(createPagingResponse(res, doc.length, doc));
+    res.json(createResponse(res, doc));
 })
 
-exports.getPomodoro = asyncHandler(async(req, res)  => {
-    const doc = await Pomodoro.find({});
+exports.getPomodoros = asyncHandler(async(req, res)  => {
+    const { limit, sort, skip } = req;
+    const doc = await Pomodoro.find().sort(sort).limit(limit).skip(skip);
 
-    res.json(createResponse(res, doc));
+    res.json(createPagingResponse(res, doc.length, doc));
 })
