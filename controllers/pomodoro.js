@@ -69,9 +69,16 @@ exports.finishedPomodoro = asyncHandler(async(req, res) => {
 exports.getPomodorosRankingByDay = asyncHandler(async(req, res)   =>{
     const { query: {date} } = req;
 
-    const startDate = new Date(date);
-    const endDate = new Date(new Date(date).setDate(new Date(date).getDate() + 1));
+    let startDate;
+    let endDate;
 
+    if(!date) {
+        startDate = new Date(dayjs().startOf("day"));
+        endDate = new Date(dayjs().startOf("day").add(1, "day"));
+    } else {
+        startDate =  new Date(date);
+        endDate = new Date(new Date(date).setDate(new Date(date).getDate() + 1));
+    }
     const doc = await getPomodorosRankingByTime(startDate, endDate);
 
     res.json(createResponse(res, doc));
@@ -80,8 +87,17 @@ exports.getPomodorosRankingByDay = asyncHandler(async(req, res)   =>{
 exports.getPomodorosRankingByWeek = asyncHandler(async(req, res)   =>{
     const { query: {date} } = req;
 
-    const startDate = getWeekFirstDay(new Date(date));
-    const endDate = getWeekLastDay(new Date(date));
+    let startDate;
+    let endDate;
+
+    if(!date) {
+        startDate = new Date(dayjs().startOf("day").add(-7, "day"));
+        endDate = new Date(dayjs().startOf("day"));
+    } else {
+        const now = new Date(date);
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    }
 
     const doc = await getPomodorosRankingByTime(startDate, endDate);
 
@@ -91,9 +107,17 @@ exports.getPomodorosRankingByWeek = asyncHandler(async(req, res)   =>{
 exports.getPomodorosRankingByMonth = asyncHandler(async(req, res)   =>{
     const { query: {date} } = req;
 
-    const startDate = new Date(new Date(date).setDate(1));
-    const endDate = new Date(new Date(startDate).setMonth(new Date(startDate).getMonth() + 1));
+    let startDate;
+    let endDate;
 
+    if(!date) {
+        startDate = new Date(dayjs().startOf("month"));
+        endDate = new Date(dayjs().startOf("day"));
+    } else {
+        const now = new Date(date);
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    }
     const doc = await getPomodorosRankingByTime(startDate, endDate);
 
     res.json(createResponse(res, doc));

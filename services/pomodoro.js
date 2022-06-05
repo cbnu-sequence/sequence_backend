@@ -1,5 +1,7 @@
 const Pomodoro = require("../models/pomodoro");
 exports.getPomodorosRankingByTime = async (startDate, endDate) =>{
+    console.log(startDate)
+    console.log(endDate)
     const doc = await Pomodoro.aggregate([
         {
             $match: {
