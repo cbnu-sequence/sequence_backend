@@ -130,7 +130,7 @@ exports.kakaoLogin = asyncHandler(async(req,res)=>{
 
    let token;
    if(!accessToken) {
-      token = await getKakaoToken();
+      token = await getKakaoToken(code);
    }
 
    const user = await getUserByKakaoToken(accessToken, token);
