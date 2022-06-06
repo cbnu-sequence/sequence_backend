@@ -1,5 +1,6 @@
 const Token = require("../models/token");
 const axios = require("axios");
+const qs = require('qs');
 const {KAKAO_CLIENT_ID, KAKAO_CLIENT_SECRET, KAKAO_REROUTING} = require("../configs");
 const createError = require("http-errors");
 exports.createToken = async () => {
@@ -17,7 +18,7 @@ exports.createToken = async () => {
     return token;
 }
 
-exports.getKakaoToken = async () => {
+exports.getKakaoToken = async (code) => {
 
     const token = await axios({
         method: 'POST',
