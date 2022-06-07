@@ -91,12 +91,12 @@ exports.getPomodorosRankingByWeek = asyncHandler(async(req, res)   =>{
     let endDate;
 
     if(!date) {
-        startDate = new Date(dayjs().startOf("day").add(-7, "day"));
-        endDate = new Date(dayjs().startOf("day"));
+        startDate = new Date(dayjs().startOf("day").add(-5, "day"));
+        endDate = new Date(dayjs().startOf("day").add(1, "day"));
     } else {
         const now = new Date(date);
-        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
-        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
+        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
     }
 
     const doc = await getPomodorosRankingByTime(startDate, endDate);
