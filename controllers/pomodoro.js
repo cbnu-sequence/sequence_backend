@@ -91,7 +91,7 @@ exports.getPomodorosRankingByWeek = asyncHandler(async(req, res)   =>{
     let endDate;
 
     if(!date) {
-        startDate = new Date(dayjs().startOf("day").add(-5, "day"));
+        startDate = new Date(dayjs().startOf("day").add(-6, "day"));
         endDate = new Date(dayjs().startOf("day").add(1, "day"));
     } else {
         const now = new Date(date);

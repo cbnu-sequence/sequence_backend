@@ -26,11 +26,6 @@ const schema = new mongoose.Schema({
         type: Number,
         default: 0,
     },
-    writer: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true,
-        ref: 'User',
-    },
  },{
     timestamps: true
 });

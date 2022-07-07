@@ -53,7 +53,7 @@ const removeFileById = async (user, id, baseDir = UPLOAD_DIR) => {
     if (!id) return;
     const file = await File.findById(id);
     if (!file) return;
-    console.log(user._id + "  " + file.uploader)
+
     if (String(user._id) !== String(file.uploader)) {
         throw createError(403, "No authentication");
     }
@@ -62,12 +62,12 @@ const removeFileById = async (user, id, baseDir = UPLOAD_DIR) => {
     return filePath;
 };
 
-const removeFilesByUrls = async (req, urls, baseDir = UPLOAD_DIR) => await Promise.all(urls.map(url => removeFileByUrl(req, url, baseDir)));
+const removeFilesByUrls = async (user, urls, baseDir = UPLOAD_DIR) => await Promise.all(urls.map(url => removeFileByUrl(user, url, baseDir)));
 
-const removeFilesByIds = async (req, ids, baseDir = UPLOAD_DIR) => await Promise.all(ids.map(id => removeFileById(req, id, baseDir)));
+const removeFilesByIds = async (user, ids, baseDir = UPLOAD_DIR) => await Promise.all(ids.map(id => removeFileById(user, id, baseDir)));
 
 const updateFilesByUrls = async (user, ref, refModel, urls) => {
-    const files = await File.find({ ref, refModel });
+    const files = await File.find({ ref, refModel }) | [];
 
     if (files.some(file => String(user._id) !== String(file.uploader))) {
         throw createError(403, "No authentication");
@@ -81,7 +81,7 @@ const updateFilesByUrls = async (user, ref, refModel, urls) => {
 };
 
 const updateFilesByIds = async (user, ref, refModel, ids) => {
-    const files = await File.find({ ref, refModel });
+    const files = await File.find({ ref, refModel }) | [];
 
     if (files.some(file => String(user._id) !== String(file.uploader))) {
         throw createError(403, "No authentication");

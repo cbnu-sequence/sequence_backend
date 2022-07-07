@@ -22,7 +22,8 @@ exports.changeMemberByUser = asyncHandler(async(req, res) => {
             throw createError(400, "해당 유저를 찾을 수 없습니다.");
         }
         const member = await Member.create({user, ...body});
-        await User.updateOne({user}, {member});
+        user.member = member._id;
+        await user.save();
     } else {
         await Member.updateOne({user}, body);
     }
