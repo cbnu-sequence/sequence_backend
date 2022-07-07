@@ -13,14 +13,12 @@ exports.createProject = asyncHandler(async(req, res)   =>{
 
     const validationResult = createProjectValidator(body);
     if(!validationResult) throw createError(400, "유효한 입력이 아닙니다.");
-    console.log(body.participants);
     const fileData = body.images? await File.find({'_id' : { $in:
         body.images
     }}): [];
-    const userData = body.participants? await User.find({'email': { $in:
-        body.participants
-    }}) : [];
-    body.participants = userData;
+    body.participants = body.participants? await User.find({'email': { $in:
+            body.participants
+        }}) : [];
     body.images = fileData.filter(file => ['image/gif', 'image/jpeg', 'image/png', 'image/bmp'].includes(file.mimetype)).map(image => image._id);
     body.writer = user;
     const data = await Project.create(body);

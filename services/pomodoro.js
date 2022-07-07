@@ -64,8 +64,9 @@ exports.getPomodorosRankingByTime = async (startDate, endDate) =>{
         },
         {
             $sort : {
-                count : -1,
-                sequence: -1,
+                "count" : -1,
+                "sequence" : -1,
+                "pomodoro.endDate": 1,
             }
         }
     ])

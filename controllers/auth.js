@@ -26,8 +26,8 @@ exports.register = asyncHandler(async(req, res) => {
    const hashedPassword = bcrypt.hashSync(body.password, salt);
    const user = await User.create({...body, password: hashedPassword, code:null});
    const member = await Member.create({user});
-   await User.updateOne({user}, {member});
-
+   user.member = member._id;
+   await user.save();
    const token = await createToken();
    const data = {
       token,
@@ -156,7 +156,8 @@ exports.kakaoLogin = asyncHandler(async(req,res)=>{
       });
 
       const member = await Member.create({user: newUser});
-      await User.updateOne({user: newUser}, {member});
+      newUser.member = member._id;
+      await newUser.save();
 
       req.session.userId = newUser.id;
    }
