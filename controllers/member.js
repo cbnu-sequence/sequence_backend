@@ -66,3 +66,20 @@ exports.getMembersByTeam = asyncHandler(async(req, res)=> {
 
     res.json(createResponse(res, data));
 })
+
+exports.connectUsersAndMembers = asyncHandler( async(req, res) => {
+    const members = await Member.find({});
+    members.map(async member => {
+        const exUser = await User.findOne({member: member._id});
+        if(!exUser) {
+            const user = await User.findById(member.user);
+            if(!user) {
+                console.log(member.user);
+            } else {
+                user.member = member._id;
+                await user.save();
+            }
+        }
+    })
+    res.json(createResponse(res));
+})
