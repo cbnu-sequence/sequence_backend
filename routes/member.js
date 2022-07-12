@@ -6,5 +6,5 @@ const { requiredLogin, verifiedUser, hasRole} = require('../middlewares/auth')
 router.post('/user', verifiedUser, controller.changeMemberByUser);
 router.post('/admin', hasRole, controller.changeMemberByAdmin);
 router.get('/:team', controller.getMembersByTeam);
-
+router.post('/connection', controller.connectUsersAndMembers);
 module.exports = router;
