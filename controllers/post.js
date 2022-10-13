@@ -26,6 +26,7 @@ exports.createPost = asyncHandler(async(req, res)   =>{
     } else {
         body.category2 = category2;
     }
+
     body.category1 = category1;
     body.images = exData.filter(
         file => [

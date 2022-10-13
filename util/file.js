@@ -81,8 +81,7 @@ const updateFilesByUrls = async (user, ref, refModel, urls) => {
 };
 
 const updateFilesByIds = async (user, ref, refModel, ids) => {
-    const files = await File.find({ ref, refModel }) | [];
-
+    const files = await File.find({ ref, refModel }) || [];
     if (files.some(file => String(user._id) !== String(file.uploader))) {
         throw createError(403, "No authentication");
     }
